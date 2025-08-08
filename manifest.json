@@ -1,0 +1,10 @@
+
+{
+  "name": "Чат-бот Charis",
+  "short_name": "Charis Chat",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdeef5",
+  "theme_color": "#ff7aac",
+  "icons": []
+}
