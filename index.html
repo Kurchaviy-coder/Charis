@@ -1583,7 +1583,109 @@
     }
 
   </style>
-<meta content="Charis — это умный чат-бот на русском и английском, поддерживающий личные и групповые беседы. Работает на LLM с поддержкой API." name="description"/><meta content="чат-бот, ИИ, Charis, AI chatbot, русская нейросеть, group chat, personal assistant" name="keywords"/><meta content="Charis" name="author"/><meta content="Чат-бот Charis – Личный и групповой чат" property="og:title"/><meta content="Умный AI чат-бот для личного и группового общения. Работает на русском и английском языках." property="og:description"/><meta content="website" property="og:type"/><meta content="https://charis.vercel.app" property="og:url"/><meta content="ru_RU" property="og:locale"/><meta content="en_US" property="og:locale:alternate"/><meta content="summary" name="twitter:card"/><meta content="Чат-бот Charis" name="twitter:title"/><meta content="Умный AI чат-бот с поддержкой русского и английского. Подходит для общения и тестирования LLM." name="twitter:description"/></head>
+<meta content="Charis — это умный чат-бот на русском и английском, поддерживающий личные и групповые беседы. Работает на LLM с поддержкой API." name="description"/><meta content="чат-бот, ИИ, Charis, AI chatbot, русская нейросеть, group chat, personal assistant" name="keywords"/><meta content="Charis" name="author"/><meta content="Чат-бот Charis – Личный и групповой чат" property="og:title"/><meta content="Умный AI чат-бот для личного и группового общения. Работает на русском и английском языках." property="og:description"/><meta content="website" property="og:type"/><meta content="https://charis.vercel.app" property="og:url"/><meta content="ru_RU" property="og:locale"/><meta content="en_US" property="og:locale:alternate"/><meta content="summary" name="twitter:card"/><meta content="Чат-бот Charis" name="twitter:title"/><meta content="Умный AI чат-бот с поддержкой русского и английского. Подходит для общения и тестирования LLM." name="twitter:description"/></meta>
+<style>
+/* Mobile tab styles - hidden by default (so PC is unaffected) */
+.settings-content .tab-buttons { display: none; }
+.settings-content .tab-page { display: block; }
+
+@media (max-width: 900px) {
+  .settings-content .tab-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    overflow-x: auto;
+  }
+  .settings-content .tab-buttons button {
+    flex: 1;
+    padding: 0.6rem;
+    font-size: 0.9rem;
+    border: 1px solid var(--accent-color);
+    border-radius: var(--border-radius);
+    background: var(--card-bg);
+    color: var(--text-color);
+    white-space: nowrap;
+  }
+  .settings-content .tab-buttons button.active {
+    background: var(--accent-gradient);
+    color: #fff;
+    border-color: transparent;
+  }
+  .settings-content .tab-page {
+    display: none;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .settings-content .tab-page.active {
+    display: flex;
+  }
+  /* Ensure settings grid becomes single column on mobile (for compatibility) */
+  .settings-content .settings { display: block; }
+}
+</style>
+<style>
+/* Mobile actions panel - hidden on desktop */
+.settings-content .mobile-actions { display: none; }
+
+/* buttons look compact on mobile */
+.settings-content .mobile-actions .mobile-action-btn {
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--accent-color-rgb),0.12);
+  background: var(--input-bg);
+  color: var(--text-color);
+  font-weight: 600;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* two-column small screens */
+@media (max-width: 480px) {
+  .settings-content .mobile-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+}
+@media (min-width: 481px) and (max-width:900px) {
+  .settings-content .mobile-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  .settings-content .mobile-actions .mobile-action-btn { padding: 0.6rem; }
+}
+/* Keep hidden on desktop explicitly */
+@media (min-width: 901px) {
+  .settings-content .mobile-actions { display: none !important; }
+}
+</style><style>
+@media (min-width: 901px) {
+  .settings-content .tab-buttons { display: none !important; }
+}
+</style><style>
+@media (max-width: 900px) {
+  .settings-content .mobile-actions { 
+    display: flex !important; 
+  }
+  .settings-content .mobile-actions button {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 120px;
+  }
+}
+@media (max-width: 480px) {
+  .settings-content .mobile-actions button {
+    flex: 1 1 100%;
+  }
+}
+@media (min-width: 901px) {
+  .settings-content .mobile-actions {
+    display: none !important;
+  }
+}
+</style>
+<style>
+/* show mobile color picker only on mobile */
+.settings-content .mobile-color-picker { display: none; }
+@media (max-width: 900px) {
+  .settings-content .mobile-color-picker { display: block !important; }
+  .settings-content .mobile-actions { display: grid !important; grid-template-columns: repeat(2, 1fr); gap:0.5rem; }
+  .settings-content .mobile-actions .mobile-action-btn { width:100%; }
+}
+</style>
+</head>
 <body>
 <!-- Hamburger Menu Button (Mobile) -->
 <button aria-controls="mobileMenuContainer" aria-expanded="false" aria-label="Меню" class="hamburger-btn" id="hamburgerBtn">
@@ -1658,8 +1760,7 @@
 <button aria-controls="groupParticipants" aria-selected="false" id="groupModeBtn" role="tab" tabindex="0">👥 Групповой чат</button>
 </div>
 </fieldset>
-<section aria-label="Настройки персонажа" class="settings" id="settingsSection">
-<fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
+<section aria-label="Настройки персонажа" class="settings" id="settingsSection"><div class="tab-buttons"><button class="active" onclick="openSettingsTab(1)" type="button">🔌 Настройки API LLM (По умолчанию)</button><button onclick="openSettingsTab(2)" type="button">🇬 Настройки Google Gemini API</button><button onclick="openSettingsTab(3)" type="button">🔗 Настройки REST API</button><button onclick="openSettingsTab(4)" type="button">👤 Основные настройки Персонажа</button><button onclick="openSettingsTab(5)" type="button">📝 Описание и личность</button><button onclick="openSettingsTab(6)" type="button">📖 Сценарий и примеры диалога</button><button onclick="openSettingsTab(7)" type="button">👋 Приветствия</button><button onclick="openSettingsTab(8)" type="button">⚙️ Дополнительные инструкции для ИИ</button><button onclick="openSettingsTab(9)" type="button">🎨 Настройки оформления</button><button onclick="openSettingsTab(10)" type="button">🖼️ Аватары</button><button onclick="openSettingsTab(11)" type="button">🧠 Память ИИ (Общая)</button></div><div class="tab-page active" id="settingsTab1"><fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
 <label for="apiKey">Ключ API (LLM):</label>
 <input aria-label="Ключ API LLM" autocomplete="off" id="apiKey" placeholder="Введите ваш API ключ" type="password"/>
 <label for="apiUrl">URL API LLM:</label>
@@ -1670,8 +1771,7 @@
 <input aria-label="Температура LLM" id="temperature" placeholder="Например, 0.7" step="0.1" type="number" value="0.7"/>
 <label for="maxTokens">Максимум токенов:</label>
 <input aria-label="Максимум токенов LLM" id="maxTokens" placeholder="Например, 1024" type="number" value="1024"/>
-</fieldset>
-<fieldset class="fieldset-span-1">
+</fieldset></div><div class="tab-page" id="settingsTab2"><fieldset class="fieldset-span-1">
 <legend>🇬 Настройки Google Gemini API</legend>
 <label for="googleApiKey">Ключ Google API:</label>
 <input aria-label="Ключ Google API" autocomplete="off" id="googleApiKey" placeholder="Введите ваш Google API ключ" type="password"/>
@@ -1684,11 +1784,10 @@
 <span class="slider round"></span>
 </label>
 </div>
-</fieldset>
-<fieldset>
+</fieldset></div><div class="tab-page" id="settingsTab3"><fieldset>
 <legend>🔗 Настройки REST API</legend>
 <label for="restApiUrl">URL REST API:</label>
-<input aria-label="URL REST API" id="restApiUrl" placeholder="URL конечной точки REST API" type="text">
+<input aria-label="URL REST API" id="restApiUrl" placeholder="URL конечной точки REST API" type="text"/>
 <label for="restApiHeaders">Заголовки REST API (JSON):</label>
 <textarea aria-label="Заголовки REST API (JSON)" id="restApiHeaders" placeholder='Пример: {"Authorization": "Bearer ВАШ_ТОКЕН"}'></textarea>
 <div style="display: flex; align-items: center; margin-top: 0.5rem; gap: 10px;">
@@ -1698,8 +1797,7 @@
 <span class="slider round"></span>
 </label>
 </div>
-</input></fieldset>
-<fieldset>
+</fieldset></div><div class="tab-page" id="settingsTab4"><fieldset>
 <legend>👤 Основные настройки Персонажа</legend>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
 <div>
@@ -1708,33 +1806,29 @@
 </div>
 <div>
 <label for="characterName">Имя персонажа:</label>
-<input aria-label="Имя персонажа" id="characterName" placeholder="Введите имя персонажа" type="text">
-</input></div>
+<input aria-label="Имя персонажа" id="characterName" placeholder="Введите имя персонажа" type="text"/>
+</div>
 </div>
 <label for="characterModel">Модель для персонажа (если отличается):</label>
 <input aria-label="Модель персонажа" id="characterModel" placeholder="Например, gpt-4-turbo или модель Gemini" type="text"/>
-</fieldset>
-<fieldset>
+</fieldset></div><div class="tab-page" id="settingsTab5"><fieldset>
 <legend>📝 Описание и личность</legend>
 <label for="description">Описание (внешность, роль, цели):</label>
 <textarea aria-label="Описание персонажа" id="description" placeholder="Описание роли, характера, предыстории..." style="min-height: 140px;"></textarea>
 <label for="personality">Личность (черты характера):</label>
 <textarea aria-label="Личность персонажа" id="personality" placeholder="Личность, манера речи, поведение..."></textarea>
-</fieldset>
-<fieldset>
+</fieldset></div><div class="tab-page" id="settingsTab6"><fieldset>
 <legend>📖 Сценарий и примеры диалога</legend>
 <label for="scenario">Сценарий (мир, окружение):</label>
 <textarea aria-label="Сценарий" id="scenario" placeholder="Описание мира, ситуации, сеттинга..."></textarea>
 <label for="mes_example">Пример диалога:</label>
 <textarea aria-label="Пример диалога" id="mes_example" placeholder="&lt;START&gt;\nПример диалога для демонстрации стиля..." style="min-height: 140px;"></textarea>
-</fieldset>
-<fieldset>
+</fieldset></div><div class="tab-page" id="settingsTab7"><fieldset>
 <legend>👋 Приветствия</legend>
 <label for="welcomeMessage">Основное приветствие:</label>
 <textarea aria-label="Основное приветственное сообщение" id="welcomeMessage" placeholder="Сообщение от бота при начале чата"></textarea>
 <!-- REMOVED: Alternative Greetings Input Field -->
-</fieldset>
-<fieldset>
+</fieldset></div><div class="tab-page" id="settingsTab8"><fieldset>
 <legend>⚙️ Дополнительные инструкции для ИИ</legend>
 <label for="system_prompt">Системный промпт:</label>
 <textarea aria-label="Системный промпт" id="system_prompt" placeholder="Глобальные инструкции для ИИ (system prompt)"></textarea>
@@ -1742,19 +1836,17 @@
 <textarea aria-label="Инструкции после истории" id="post_history_instructions" placeholder="Инструкции, которые вставляются после истории чата"></textarea>
 <label for="creator_notes">Заметки создателя:</label>
 <textarea aria-label="Заметки создателя" id="creator_notes" placeholder="Заметки от создателя персонажа"></textarea>
-</fieldset>
-<fieldset class="fieldset-span-1">
+</fieldset></div><div class="tab-page" id="settingsTab9"><fieldset class="fieldset-span-1">
 <legend>🎨 Настройки оформления</legend>
 <div>
 <label for="mainTextColor">Основной цвет текста:</label>
-<input aria-label="Основной цвет текста" id="mainTextColor" type="color"/>
+<input aria-label="Основной цвет текста" id="mainTextColor" onchange="applyTextColor(this.value); localStorage.setItem(TEXT_COLOR_STORAGE, this.value);" type="color"/>
 </div>
 <div style="margin-top: 1rem;">
 <label for="chatFontSize">Размер текста в чате: <span id="chatFontSizeIndicator">100%</span></label>
 <input aria-label="Размер текста в чате" id="chatFontSize" max="1.5" min="0.8" step="0.05" type="range" value="1"/>
 </div>
-</fieldset>
-<fieldset class="fieldset-span-1">
+</fieldset></div><div class="tab-page" id="settingsTab10"><fieldset class="fieldset-span-1">
 <legend>🖼️ Аватары</legend>
 <div class="avatar-selection">
 <button onclick="showAvatarOptions('link', 'character')" type="button">Аватар Персонажа: Ссылка</button>
@@ -1776,22 +1868,11 @@
 <div id="avatarFileInputWrapper_user" style="display:none; margin-top: 0.5rem;">
 <input accept="image/*" aria-label="Выбор файла вашего аватара" id="avatarFileInput_user" type="file"/>
 </div>
-</fieldset>
-<fieldset>
+</fieldset></div><div class="tab-page" id="settingsTab11"><fieldset>
 <legend>🧠 Память ИИ (Общая)</legend>
 <textarea aria-label="Память нейросети" class="memory-box" id="neuralMemory" placeholder="Заметки и контекст, которые бот будет помнить глобально..." spellcheck="true"></textarea>
-</fieldset>
-<div style="grid-column: span 2; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top:1rem;">
-<button onclick="saveSettings()" type="button">💾 Сохранить/Обновить</button>
-<button onclick="clearMessages()" style="background: #ffcdd2; color:#5f2120;" type="button">🗑️ Очистить чат</button>
-<button onclick="exportCharacterData()" type="button">📤 Экспорт JSON</button>
-<button onclick="importCharacterData()" type="button">📥 Импорт JSON</button>
-<input accept=".json, .card" id="jsonFileInput" onchange="handleFileUpload(event)" style="display:none" type="file"/>
-<button onclick="openLorebookModal()" type="button">📚 Lorebook</button>
-<button onclick="openBackgroundModal()" type="button">🖼️ Фон чата</button>
-</div>
-</section>
-</div>
+</fieldset></div><div class="settings-bottom-actions" style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;"><button onclick="importCharacterData()" type="button">📥 Импорт JSON</button><button onclick="exportCharacterData()" type="button">📤 Экспорт JSON</button><button onclick="openBackgroundModal()" type="button">🖼️ Фон чата</button><button onclick="openLorebookModal()" type="button">📚 Lorebook</button><button onclick="saveSettings()" type="button">Сохранить</button><button onclick="clearChat()" type="button">Очистить чат</button></div></section>
+<div class="settings-bottom-actions mobile-actions" style="display:none; margin-top: 1rem; flex-wrap: wrap; gap: 0.5rem; justify-content:center;"><button class="mobile-action-btn" onclick="saveSettings()" type="button">💾 Сохранить/Обновить</button><button class="mobile-action-btn" onclick="exportCharacterData()" type="button">📤 Сохранить JSON</button><button class="mobile-action-btn" onclick="document.getElementById('jsonFileInput') &amp;&amp; document.getElementById('jsonFileInput').click()" type="button">📥 Загрузить JSON</button><button class="mobile-action-btn" onclick="openClearChatConfirm()" type="button">🗑️ Очистить чат</button><button class="mobile-action-btn" onclick="openBackgroundModal()" type="button">🖼️ Фон</button><button class="mobile-action-btn" onclick="openLorebookModal()" type="button">📚 Lorebook</button></div></div>
 </div>
 <!-- Lorebook Modal -->
 <div id="lorebookModal">
@@ -4754,5 +4835,471 @@
     }
 
   </script>
+<script>
+// Original (PC) settings content (from original file)
+const originalSettingsHTML = `
+<fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
+<label for="apiKey">Ключ API (LLM):</label>
+<input aria-label="Ключ API LLM" autocomplete="off" id="apiKey" placeholder="Введите ваш API ключ" type="password"/>
+<label for="apiUrl">URL API LLM:</label>
+<input aria-label="URL LLM API" id="apiUrl" type="text" value="https://llm.chutes.ai/v1/chat/completions"/>
+<label for="model">Модель LLM (по умолчанию):</label>
+<input aria-label="Модель LLM" id="model" readonly="" type="text" value="deepseek-ai/DeepSeek-V3-0324"/>
+<label for="temperature">Температура (0-1):</label>
+<input aria-label="Температура LLM" id="temperature" placeholder="Например, 0.7" step="0.1" type="number" value="0.7"/>
+<label for="maxTokens">Максимум токенов:</label>
+<input aria-label="Максимум токенов LLM" id="maxTokens" placeholder="Например, 1024" type="number" value="1024"/>
+</fieldset>
+<fieldset class="fieldset-span-1">
+<legend>🇬 Настройки Google Gemini API</legend>
+<label for="googleApiKey">Ключ Google API:</label>
+<input aria-label="Ключ Google API" autocomplete="off" id="googleApiKey" placeholder="Введите ваш Google API ключ" type="password"/>
+<label for="googleApiModel">Модель Google Gemini:</label>
+<select aria-label="Модель Google Gemini" id="googleApiModel"></select>
+<div style="display: flex; align-items: center; margin-top: 0.5rem; gap: 10px;">
+<label for="enableGoogleApi" style="font-weight: 500; margin-bottom: 0;">Использовать Google Gemini API:</label>
+<label class="switch">
+<input aria-label="Включить Google Gemini API" id="enableGoogleApi" type="checkbox"/>
+<span class="slider round"></span>
+</label>
+</div>
+</fieldset>
+<fieldset>
+<legend>🔗 Настройки REST API</legend>
+<label for="restApiUrl">URL REST API:</label>
+<input aria-label="URL REST API" id="restApiUrl" placeholder="URL конечной точки REST API" type="text"/>
+<label for="restApiHeaders">Заголовки REST API (JSON):</label>
+<textarea aria-label="Заголовки REST API (JSON)" id="restApiHeaders" placeholder='Пример: {"Authorization": "Bearer ВАШ_ТОКЕН"}'></textarea>
+<div style="display: flex; align-items: center; margin-top: 0.5rem; gap: 10px;">
+<label for="enableRestApi" style="font-weight: 500; margin-bottom: 0;">Использовать REST API:</label>
+<label class="switch">
+<input aria-label="Включить REST API" id="enableRestApi" type="checkbox">
+<span class="slider round"></span>
+</input></label>
+</div>
+</fieldset>
+<fieldset>
+<legend>👤 Основные настройки Персонажа</legend>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+<div>
+<label for="characterSelect">Выбрать персонажа:</label>
+<select aria-label="Выбор персонажа" disabled="" id="characterSelect"></select>
+</div>
+<div>
+<label for="characterName">Имя персонажа:</label>
+<input aria-label="Имя персонажа" id="characterName" placeholder="Введите имя персонажа" type="text"/>
+</div>
+</div>
+<label for="characterModel">Модель для персонажа (если отличается):</label>
+<input aria-label="Модель персонажа" id="characterModel" placeholder="Например, gpt-4-turbo или модель Gemini" type="text"/>
+</fieldset>
+<fieldset>
+<legend>📝 Описание и личность</legend>
+<label for="description">Описание (внешность, роль, цели):</label>
+<textarea aria-label="Описание персонажа" id="description" placeholder="Описание роли, характера, предыстории..." style="min-height: 140px;"></textarea>
+<label for="personality">Личность (черты характера):</label>
+<textarea aria-label="Личность персонажа" id="personality" placeholder="Личность, манера речи, поведение..."></textarea>
+</fieldset>
+<fieldset>
+<legend>📖 Сценарий и примеры диалога</legend>
+<label for="scenario">Сценарий (мир, окружение):</label>
+<textarea aria-label="Сценарий" id="scenario" placeholder="Описание мира, ситуации, сеттинга..."></textarea>
+<label for="mes_example">Пример диалога:</label>
+<textarea aria-label="Пример диалога" id="mes_example" placeholder="&lt;START&gt;\\nПример диалога для демонстрации стиля..." style="min-height: 140px;"></textarea>
+</fieldset>
+<fieldset>
+<legend>👋 Приветствия</legend>
+<label for="welcomeMessage">Основное приветствие:</label>
+<textarea aria-label="Основное приветственное сообщение" id="welcomeMessage" placeholder="Сообщение от бота при начале чата"></textarea>
+<!-- REMOVED: Alternative Greetings Input Field -->
+</fieldset>
+<fieldset>
+<legend>⚙️ Дополнительные инструкции для ИИ</legend>
+<label for="system_prompt">Системный промпт:</label>
+<textarea aria-label="Системный промпт" id="system_prompt" placeholder="Глобальные инструкции для ИИ (system prompt)"></textarea>
+<label for="post_history_instructions">Инструкции после истории:</label>
+<textarea aria-label="Инструкции после истории" id="post_history_instructions" placeholder="Инструкции, которые вставляются после истории чата"></textarea>
+<label for="creator_notes">Заметки создателя:</label>
+<textarea aria-label="Заметки создателя" id="creator_notes" placeholder="Заметки от создателя персонажа"></textarea>
+</fieldset>
+<fieldset class="fieldset-span-1">
+<legend>🎨 Настройки оформления</legend>
+<div>
+<label for="mainTextColor">Основной цвет текста:</label>
+<input aria-label="Основной цвет текста" id="mainTextColor" type="color"/>
+</div>
+<div style="margin-top: 1rem;">
+<label for="chatFontSize">Размер текста в чате: <span id="chatFontSizeIndicator">100%</span></label>
+<input aria-label="Размер текста в чате" id="chatFontSize" max="1.5" min="0.8" step="0.05" type="range" value="1"/>
+</div>
+</fieldset>
+<fieldset class="fieldset-span-1">
+<legend>🖼️ Аватары</legend>
+<div class="avatar-selection">
+<button onclick="showAvatarOptions('link', 'character')" type="button">Аватар Персонажа: Ссылка</button>
+<button onclick="showAvatarOptions('file', 'character')" type="button">Аватар Персонажа: Файл</button>
+</div>
+<div id="avatarLinkInput_character" style="display:none; margin-top: 0.5rem;">
+<input aria-label="Ссылка на аватар персонажа" id="avatarUrl_character" placeholder="URL аватара персонажа" type="text"/>
+</div>
+<div id="avatarFileInputWrapper_character" style="display:none; margin-top: 0.5rem;">
+<input accept="image/*" aria-label="Выбор файла аватара персонажа" id="avatarFileInput_character" type="file"/>
+</div>
+<div class="avatar-selection" style="margin-top: 1rem;">
+<button onclick="showAvatarOptions('link', 'user')" type="button">Ваш Аватар: Ссылка</button>
+<button onclick="showAvatarOptions('file', 'user')" type="button">Ваш Аватар: Файл</button>
+</div>
+<div id="avatarLinkInput_user" style="display:none; margin-top: 0.5rem;">
+<input aria-label="Ссылка на ваш аватар" id="avatarUrl_user" placeholder="URL вашего аватара" type="text"/>
+</div>
+<div id="avatarFileInputWrapper_user" style="display:none; margin-top: 0.5rem;">
+<input accept="image/*" aria-label="Выбор файла вашего аватара" id="avatarFileInput_user" type="file"/>
+</div>
+</fieldset>
+<fieldset>
+<legend>🧠 Память ИИ (Общая)</legend>
+<textarea aria-label="Память нейросети" class="memory-box" id="neuralMemory" placeholder="Заметки и контекст, которые бот будет помнить глобально..." spellcheck="true"></textarea>
+</fieldset>
+<div style="grid-column: span 2; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top:1rem;">
+<button onclick="saveSettings()" type="button">💾 Сохранить/Обновить</button>
+<button onclick="clearMessages()" style="background: #ffcdd2; color:#5f2120;" type="button">🗑️ Очистить чат</button>
+<button onclick="exportCharacterData()" type="button">📤 Экспорт JSON</button>
+<button onclick="importCharacterData()" type="button">📥 Импорт JSON</button>
+<input accept=".json, .card" id="jsonFileInput" onchange="handleFileUpload(event)" style="display:none" type="file"/>
+<button onclick="openLorebookModal()" type="button">📚 Lorebook</button>
+<button onclick="openBackgroundModal()" type="button">🖼️ Фон чата</button>
+</div>
+`;
+// Mobile (tabbed) settings content (from modified file)
+const mobileSettingsHTML = `<div class="tab-buttons"><button class="active" onclick="openSettingsTab(1)" type="button">🔌 Настройки API LLM (По умолчанию)</button><button onclick="openSettingsTab(2)" type="button">🇬 Настройки Google Gemini API</button><button onclick="openSettingsTab(3)" type="button">🔗 Настройки REST API</button><button onclick="openSettingsTab(4)" type="button">👤 Основные настройки Персонажа</button><button onclick="openSettingsTab(5)" type="button">📝 Описание и личность</button><button onclick="openSettingsTab(6)" type="button">📖 Сценарий и примеры диалога</button><button onclick="openSettingsTab(7)" type="button">👋 Приветствия</button><button onclick="openSettingsTab(8)" type="button">⚙️ Дополнительные инструкции для ИИ</button><button onclick="openSettingsTab(9)" type="button">🎨 Настройки оформления</button><button onclick="openSettingsTab(10)" type="button">🖼️ Аватары</button><button onclick="openSettingsTab(11)" type="button">🧠 Память ИИ (Общая)</button></div><div class="tab-page active" id="settingsTab1"><fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
+<label for="apiKey">Ключ API (LLM):</label>
+<input aria-label="Ключ API LLM" autocomplete="off" id="apiKey" placeholder="Введите ваш API ключ" type="password"/>
+<label for="apiUrl">URL API LLM:</label>
+<input aria-label="URL LLM API" id="apiUrl" type="text" value="https://llm.chutes.ai/v1/chat/completions"/>
+<label for="model">Модель LLM (по умолчанию):</label>
+<input aria-label="Модель LLM" id="model" readonly="" type="text" value="deepseek-ai/DeepSeek-V3-0324"/>
+<label for="temperature">Температура (0-1):</label>
+<input aria-label="Температура LLM" id="temperature" placeholder="Например, 0.7" step="0.1" type="number" value="0.7"/>
+<label for="maxTokens">Максимум токенов:</label>
+<input aria-label="Максимум токенов LLM" id="maxTokens" placeholder="Например, 1024" type="number" value="1024"/>
+</fieldset></div><div class="tab-page" id="settingsTab2"><fieldset class="fieldset-span-1">
+<legend>🇬 Настройки Google Gemini API</legend>
+<label for="googleApiKey">Ключ Google API:</label>
+<input aria-label="Ключ Google API" autocomplete="off" id="googleApiKey" placeholder="Введите ваш Google API ключ" type="password"/>
+<label for="googleApiModel">Модель Google Gemini:</label>
+<select aria-label="Модель Google Gemini" id="googleApiModel"></select>
+<div style="display: flex; align-items: center; margin-top: 0.5rem; gap: 10px;">
+<label for="enableGoogleApi" style="font-weight: 500; margin-bottom: 0;">Использовать Google Gemini API:</label>
+<label class="switch">
+<input aria-label="Включить Google Gemini API" id="enableGoogleApi" type="checkbox"/>
+<span class="slider round"></span>
+</label>
+</div>
+</fieldset></div><div class="tab-page" id="settingsTab3"><fieldset>
+<legend>🔗 Настройки REST API</legend>
+<label for="restApiUrl">URL REST API:</label>
+<input aria-label="URL REST API" id="restApiUrl" placeholder="URL конечной точки REST API" type="text"/>
+<label for="restApiHeaders">Заголовки REST API (JSON):</label>
+<textarea aria-label="Заголовки REST API (JSON)" id="restApiHeaders" placeholder='Пример: {"Authorization": "Bearer ВАШ_ТОКЕН"}'></textarea>
+<div style="display: flex; align-items: center; margin-top: 0.5rem; gap: 10px;">
+<label for="enableRestApi" style="font-weight: 500; margin-bottom: 0;">Использовать REST API:</label>
+<label class="switch">
+<input aria-label="Включить REST API" id="enableRestApi" type="checkbox"/>
+<span class="slider round"></span>
+</label>
+</div>
+</fieldset></div><div class="tab-page" id="settingsTab4"><fieldset>
+<legend>👤 Основные настройки Персонажа</legend>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+<div>
+<label for="characterSelect">Выбрать персонажа:</label>
+<select aria-label="Выбор персонажа" disabled="" id="characterSelect"></select>
+</div>
+<div>
+<label for="characterName">Имя персонажа:</label>
+<input aria-label="Имя персонажа" id="characterName" placeholder="Введите имя персонажа" type="text"/>
+</div>
+</div>
+<label for="characterModel">Модель для персонажа (если отличается):</label>
+<input aria-label="Модель персонажа" id="characterModel" placeholder="Например, gpt-4-turbo или модель Gemini" type="text"/>
+</fieldset></div><div class="tab-page" id="settingsTab5"><fieldset>
+<legend>📝 Описание и личность</legend>
+<label for="description">Описание (внешность, роль, цели):</label>
+<textarea aria-label="Описание персонажа" id="description" placeholder="Описание роли, характера, предыстории..." style="min-height: 140px;"></textarea>
+<label for="personality">Личность (черты характера):</label>
+<textarea aria-label="Личность персонажа" id="personality" placeholder="Личность, манера речи, поведение..."></textarea>
+</fieldset></div><div class="tab-page" id="settingsTab6"><fieldset>
+<legend>📖 Сценарий и примеры диалога</legend>
+<label for="scenario">Сценарий (мир, окружение):</label>
+<textarea aria-label="Сценарий" id="scenario" placeholder="Описание мира, ситуации, сеттинга..."></textarea>
+<label for="mes_example">Пример диалога:</label>
+<textarea aria-label="Пример диалога" id="mes_example" placeholder="&lt;START&gt;\\nПример диалога для демонстрации стиля..." style="min-height: 140px;"></textarea>
+</fieldset></div><div class="tab-page" id="settingsTab7"><fieldset>
+<legend>👋 Приветствия</legend>
+<label for="welcomeMessage">Основное приветствие:</label>
+<textarea aria-label="Основное приветственное сообщение" id="welcomeMessage" placeholder="Сообщение от бота при начале чата"></textarea>
+<!-- REMOVED: Alternative Greetings Input Field -->
+</fieldset></div><div class="tab-page" id="settingsTab8"><fieldset>
+<legend>⚙️ Дополнительные инструкции для ИИ</legend>
+<label for="system_prompt">Системный промпт:</label>
+<textarea aria-label="Системный промпт" id="system_prompt" placeholder="Глобальные инструкции для ИИ (system prompt)"></textarea>
+<label for="post_history_instructions">Инструкции после истории:</label>
+<textarea aria-label="Инструкции после истории" id="post_history_instructions" placeholder="Инструкции, которые вставляются после истории чата"></textarea>
+<label for="creator_notes">Заметки создателя:</label>
+<textarea aria-label="Заметки создателя" id="creator_notes" placeholder="Заметки от создателя персонажа"></textarea>
+</fieldset></div><div class="tab-page" id="settingsTab9"><fieldset class="fieldset-span-1">
+<legend>🎨 Настройки оформления</legend>
+<div>
+<label for="mainTextColor">Основной цвет текста:</label>
+<input aria-label="Основной цвет текста" id="mainTextColor" type="color"/>
+</div>
+<div style="margin-top: 1rem;">
+<label for="chatFontSize">Размер текста в чате: <span id="chatFontSizeIndicator">100%</span></label>
+<input aria-label="Размер текста в чате" id="chatFontSize" max="1.5" min="0.8" step="0.05" type="range" value="1"/>
+</div>
+</fieldset></div><div class="tab-page" id="settingsTab10"><fieldset class="fieldset-span-1">
+<legend>🖼️ Аватары</legend>
+<div class="avatar-selection">
+<button onclick="showAvatarOptions('link', 'character')" type="button">Аватар Персонажа: Ссылка</button>
+<button onclick="showAvatarOptions('file', 'character')" type="button">Аватар Персонажа: Файл</button>
+</div>
+<div id="avatarLinkInput_character" style="display:none; margin-top: 0.5rem;">
+<input aria-label="Ссылка на аватар персонажа" id="avatarUrl_character" placeholder="URL аватара персонажа" type="text"/>
+</div>
+<div id="avatarFileInputWrapper_character" style="display:none; margin-top: 0.5rem;">
+<input accept="image/*" aria-label="Выбор файла аватара персонажа" id="avatarFileInput_character" type="file"/>
+</div>
+<div class="avatar-selection" style="margin-top: 1rem;">
+<button onclick="showAvatarOptions('link', 'user')" type="button">Ваш Аватар: Ссылка</button>
+<button onclick="showAvatarOptions('file', 'user')" type="button">Ваш Аватар: Файл</button>
+</div>
+<div id="avatarLinkInput_user" style="display:none; margin-top: 0.5rem;">
+<input aria-label="Ссылка на ваш аватар" id="avatarUrl_user" placeholder="URL вашего аватара" type="text"/>
+</div>
+<div id="avatarFileInputWrapper_user" style="display:none; margin-top: 0.5rem;">
+<input accept="image/*" aria-label="Выбор файла вашего аватара" id="avatarFileInput_user" type="file"/>
+</div>
+</fieldset></div><div class="tab-page" id="settingsTab11"><fieldset>
+<legend>🧠 Память ИИ (Общая)</legend>
+<textarea aria-label="Память нейросети" class="memory-box" id="neuralMemory" placeholder="Заметки и контекст, которые бот будет помнить глобально..." spellcheck="true"></textarea>
+</fieldset></div>`;
+
+function applySettingsLayout() {
+  const container = document.getElementById('settingsSection');
+  if(!container) return;
+  const w = window.innerWidth || document.documentElement.clientWidth;
+  if (w > 900) {
+    // PC: restore original layout (if not already)
+    if (container.innerHTML.trim() !== originalSettingsHTML.trim()) {
+      container.innerHTML = originalSettingsHTML;
+      // reattach any JS bindings if needed (basic)
+      if (typeof initSettingsBindings === 'function') initSettingsBindings();
+    }
+    // hide mobile tab buttons if any exist
+    const tb = document.querySelectorAll('.settings-content .tab-buttons');
+    tb.forEach(b => b.style.display = 'none');
+  } else {
+    // Mobile: use tabbed layout (if not already)
+    if (container.innerHTML.trim() !== mobileSettingsHTML.trim()) {
+      container.innerHTML = mobileSettingsHTML;
+      // ensure first tab active
+      const btns = container.querySelectorAll('.tab-buttons button');
+      if (btns && btns.length > 0) btns[0].classList.add('active');
+      // run mobile tab initializer if exists
+      if (typeof initMobileTabs === 'function') initMobileTabs();
+      if (typeof initSettingsBindings === 'function') initSettingsBindings();
+    }
+    // show mobile tab buttons
+    const tb = document.querySelectorAll('.settings-content .tab-buttons');
+    tb.forEach(b => b.style.display = 'flex');
+  }
+}
+
+// helper in case other functions need to rebind
+function initMobileTabs() {
+  // ensure openSettingsTab exists
+  if (typeof openSettingsTab !== 'function') return;
+  // activate first tab
+  const btns = document.querySelectorAll('.settings-content .tab-buttons button');
+  if (btns.length) btns.forEach((b,i)=> b.classList.toggle('active', i===0));
+  const pages = document.querySelectorAll('.settings-content .tab-page');
+  pages.forEach((p,i)=> p.classList.toggle('active', i===0));
+}
+
+// expose a simple initializer for other scripts
+function initSettingsBindings() {
+  // nothing heavy for now; placeholder to reattach event handlers if needed
+}
+
+// switch on load and resize
+window.addEventListener('DOMContentLoaded', applySettingsLayout);
+window.addEventListener('resize', applySettingsLayout);
+</script>
+<script>
+function openSettingsTab(tabIndex) {
+  const pages = document.querySelectorAll('.settings-content .tab-page');
+  const buttons = document.querySelectorAll('.settings-content .tab-buttons button');
+  pages.forEach((p, idx) => {
+    p.classList.toggle('active', idx === tabIndex - 1);
+  });
+  buttons.forEach((b, idx) => {
+    b.classList.toggle('active', idx === tabIndex - 1);
+  });
+  // scroll to top of modal to show content
+  const modal = document.getElementById('settingsModal');
+  if (modal) modal.scrollTop = 0;
+}
+</script>
+<input accept=".json, .card" id="jsonFileInput" onchange="if(typeof handleFileUpload === 'function'){handleFileUpload(event);} else if(typeof importCharacterData === 'function'){importCharacterData(event)}" style="display:none" type="file"/>
+<script>
+// Ensure clearChat exists and works for both personal and group modes
+function clearChat() {
+  try {
+    // Prefer using existing globals if present
+    const mode = typeof currentMode !== 'undefined' ? currentMode : (document.getElementById('groupParticipants') ? 'group' : 'personal');
+    if (mode === 'personal') {
+      const name = typeof getCurrentCharacterName === 'function' ? getCurrentCharacterName() : (window.activeCharacter || null);
+      if (!name) {
+        if (typeof showCustomAlert === 'function') showCustomAlert('Персонаж не выбран.');
+        return;
+      }
+      if (typeof getChatKey === 'function') {
+        localStorage.setItem(getChatKey(name), JSON.stringify([]));
+      } else {
+        localStorage.setItem('chatHistory_v3_' + name, JSON.stringify([]));
+      }
+      if (typeof allMessages !== 'undefined') allMessages = [];
+      if (typeof loadAndRenderMessages === 'function') {
+        loadAndRenderMessages();
+      } else {
+        const messagesBox = document.getElementById('messages');
+        if (messagesBox) messagesBox.innerHTML = '';
+      }
+    } else {
+      // group/room mode
+      const roomKey = typeof ROOM_HISTORY_KEY !== 'undefined' ? ROOM_HISTORY_KEY : 'room_history_v3';
+      localStorage.setItem(roomKey, JSON.stringify([]));
+      if (typeof allMessages !== 'undefined') allMessages = [];
+      if (typeof loadAndRenderMessages === 'function') {
+        loadAndRenderMessages();
+      } else {
+        const messagesBox = document.getElementById('messages');
+        if (messagesBox) messagesBox.innerHTML = '';
+      }
+    }
+    // give user feedback if function exists
+    if (typeof showCustomAlert === 'function') showCustomAlert('Чат очищен.');
+  } catch (e) {
+    console.error('clearChat error', e);
+    if (typeof showCustomAlert === 'function') showCustomAlert('Ошибка при очистке чата.');
+  }
+}
+</script>
+<div id="clearChatConfirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index: 1100; align-items:center; justify-content:center;">
+<div class="settings-content" style="max-width:420px; width:90%; padding:1rem; text-align:center;">
+<h3 style="margin-top:0;">Подтвердите очистку</h3>
+<p>Вы уверены, что хотите полностью очистить историю чата? Это действие необратимо.</p>
+<div style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem;">
+<button onclick="confirmClearChat()" style="background:var(--accent-gradient);" type="button">Да, очистить</button>
+<button onclick="closeClearChatConfirm()" style="background:var(--input-bg); color:var(--text-color); border:1px solid rgba(var(--accent-color-rgb),0.12);" type="button">Отмена</button>
+</div>
+</div>
+</div>
+<script>
+function openClearChatConfirm() {
+  const modal = document.getElementById('clearChatConfirmModal');
+  if(modal) modal.style.display = 'flex';
+}
+function closeClearChatConfirm() {
+  const modal = document.getElementById('clearChatConfirmModal');
+  if(modal) modal.style.display = 'none';
+}
+function confirmClearChat() {
+  closeClearChatConfirm();
+  if (typeof clearChat === 'function') {
+    clearChat();
+  } else {
+    // fallback: try to clear via previous implementation
+    try {
+      const name = (typeof getCurrentCharacterName === 'function') ? getCurrentCharacterName() : (window.activeCharacter || null);
+      if (name) {
+        localStorage.setItem('chatHistory_v3_' + name, JSON.stringify([]));
+      }
+      if (typeof allMessages !== 'undefined') allMessages = [];
+      if (typeof loadAndRenderMessages === 'function') loadAndRenderMessages();
+      if (typeof showCustomAlert === 'function') showCustomAlert('Чат очищен.');
+    } catch (e) { console.error(e); }
+  }
+}
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  try {
+    var saved = localStorage.getItem(TEXT_COLOR_STORAGE);
+    if(saved) {
+      var main = document.getElementById('mainTextColor');
+      if(main) main.value = saved;
+      var mobile = document.getElementById('mainTextColor_mobile');
+      if(mobile) mobile.value = saved;
+      applyTextColor(saved);
+    } else {
+      var main = document.getElementById('mainTextColor');
+      var mobile = document.getElementById('mainTextColor_mobile');
+      if(main && mobile) {
+        mobile.value = main.value;
+      }
+    }
+  } catch(e){ console.error(e); }
+});
+</script>
+<script>
+function initSettingsBindings() {
+  try {
+    const colorInput = document.getElementById('mainTextColor');
+    if (colorInput && !colorInput._hasBinding) {
+      colorInput.addEventListener('input', (e) => {
+        if (typeof applyTextColor === 'function') applyTextColor(e.target.value);
+        if (typeof saveToStorage === 'function') saveToStorage(TEXT_COLOR_STORAGE, e.target.value);
+        else localStorage.setItem(TEXT_COLOR_STORAGE, e.target.value);
+      });
+      colorInput._hasBinding = true;
+    }
+    // ensure chat font size slider works
+    const chatFontSizeSlider = document.getElementById('chatFontSize');
+    const chatFontSizeIndicator = document.getElementById('chatFontSizeIndicator');
+    if (chatFontSizeSlider && !chatFontSizeSlider._hasBinding) {
+      chatFontSizeSlider.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        if (typeof applyChatTextSize === 'function') applyChatTextSize(v);
+        try {
+          if (typeof saveToStorage === 'function') saveToStorage(CHAT_FONT_SIZE_STORAGE, v);
+          else localStorage.setItem(CHAT_FONT_SIZE_STORAGE, v);
+        } catch(e){}
+        if (chatFontSizeIndicator) chatFontSizeIndicator.textContent = `${Math.round(v*100)}%`;
+      });
+      chatFontSizeSlider._hasBinding = true;
+    }
+  } catch(e){ console.error('initSettingsBindings err', e); }
+}
+
+function initMobileTabs() {
+  try {
+    const container = document.getElementById('settingsSection');
+    if (!container) return;
+    const btns = container.querySelectorAll('.tab-buttons button');
+    btns.forEach((b, idx) => {
+      b.onclick = function(){ openSettingsTab(idx+1); };
+    });
+    // ensure tab pages have proper active states for first tab
+    const pages = container.querySelectorAll('.tab-page');
+    if (pages && pages.length) {
+      pages.forEach((p,i)=> p.classList.toggle('active', i===0));
+    }
+  } catch(e){ console.error('initMobileTabs err', e); }
+}
+
+// run once to attach if DOM already ready
+document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings(); initMobileTabs(); });
+</script>
 </body>
 </html>
