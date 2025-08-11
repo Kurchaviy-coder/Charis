@@ -1934,7 +1934,7 @@
     const GOOGLE_API_KEY_STORAGE = "googleApiKey_v1";
     const GOOGLE_API_MODEL_STORAGE = "googleApiModel_v1";
     const ENABLE_GOOGLE_API_STORAGE = "enableGoogleApi_v1";
-    const AVAILABLE_GOOGLE_MODELS = [ { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash" } ];
+    const AVAILABLE_GOOGLE_MODELS = [ { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash" }, { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro" }, { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" }, { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash-Lite" } ];
 
     let useRestApi = false;
     let restApiUrlValue = "";
@@ -3378,7 +3378,17 @@
                 return true;
             });
 
-            await fetchGeminiChatCompletion(
+            
+            // Добавляем пост-инструкции в systemPromptText (если заданы) чтобы Gemini учитывал их с повышенным приоритетом
+            try {
+                const postEl = document.getElementById('post_history_instructions');
+                const postInstr = postEl ? postEl.value.trim() : '';
+                if (postInstr) {
+                    // добавляем в конец systemPromptText, отделяя переносами для ясности
+                    systemPromptText = (systemPromptText ? systemPromptText + "\n\n" : "") + postInstr;
+                }
+            } catch(e){ console.error('post history instructions append error', e); }
+        await fetchGeminiChatCompletion(
                 googleApiKey, googleApiModel, systemPromptText, geminiContents,
                 temperature, max_tokens, characterNameToRespond,
                 allMessages, charDataForApi.avatarCharacter, true
@@ -3389,6 +3399,15 @@
             messagesForAPI.push(...historyUpToEdited.map(m => {
                 let apiMsgContentArray = [];
                 if (m.content) apiMsgContentArray.push({ type: "text", text: m.content });
+                // Append post-history instructions as system (if present)
+                try {
+                    const postEl = document.getElementById('post_history_instructions');
+                    const postInstr = postEl ? postEl.value.trim() : '';
+                    if (postInstr) {
+                        messagesForAPI.push({ role: "system", content: postInstr });
+                    }
+                } catch(e){ console.error('post history instructions append error', e); }
+                
                 if (m.attachments && m.attachments.some(att => att.type.startsWith('image/') && att.src.startsWith('data:image'))) {
                     m.attachments.filter(att => att.type.startsWith('image/') && att.src.startsWith('data:image')).forEach(att => {
                          apiMsgContentArray.push({ type: "image_url", image_url: { url: att.src } });
@@ -3584,6 +3603,15 @@
                 messagesForStdAPI.push(...historyForAPI.map(m => {
                      let apiContentArray = [];
                      if (m.content) apiContentArray.push({ type: "text", text: m.content });
+                // Append 'Инструкции после истории' как system-сообщение (если задано)
+                try {
+                    const postEl = document.getElementById('post_history_instructions');
+                    const postInstr = postEl ? postEl.value.trim() : '';
+                    if (postInstr) {
+                        messagesForStdAPI.push({ role: "system", content: postInstr });
+                    }
+                } catch(e){ console.error('post history instructions append error', e); }
+                
                      if (m.attachments && m.attachments.some(att => att.type.startsWith('image/') && att.src.startsWith('data:image'))) {
                          m.attachments.filter(att => att.type.startsWith('image/') && att.src.startsWith('data:image')).forEach(att => {
                               apiContentArray.push({ type: "image_url", image_url: { url: att.src } });
