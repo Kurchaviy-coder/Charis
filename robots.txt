@@ -1,4 +1,3 @@
-
 User-agent: *
 Allow: /
 Sitemap: https://charis-chat.vercel.app/sitemap.xml
