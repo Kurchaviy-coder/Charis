@@ -1,10 +1,22 @@
 
 {
-  "name": "Чат-бот Charis",
+  "name": "Charis Chat",
   "short_name": "Charis Chat",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fdeef5",
   "theme_color": "#ff7aac",
-  "icons": []
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "logo-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
