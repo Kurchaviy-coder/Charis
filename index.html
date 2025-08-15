@@ -3660,9 +3660,25 @@
 
     // --- Mobile Menu & View Handling ---
 
-    function setupMobileHamburgerMenu() {
+    
+function setupMobileHamburgerMenu() {{
         const placeholder = mobileMenuItemsPlaceholder;
         if (!placeholder) return;
+
+        // Preserve existing buttons (if present) BEFORE we clear the placeholder.
+        let themeBtn = document.getElementById('themeToggle');
+        let settingsBtn = document.getElementById('toggleSettingsBtn');
+
+        // Templates to recreate buttons if they get removed elsewhere.
+        const themeTemplate = `<button aria-label="Переключить тему" id="themeToggle" tabindex="0" title="Переключить тему">
+<svg aria-hidden="true" focusable="false" id="themeIcon" viewbox="0 0 24 24">
+<path d="M21 12.79A9 9 0 0112.21 3 7 7 0 1021 12.79z"></path> </svg>
+</button>`;
+        const settingsTemplate = `<button aria-label="Настройки" id="toggleSettingsBtn" tabindex="0" title="Настройки">
+<span>⚙️</span>
+</button>`;
+
+        // Clear placeholder (we have references or templates if needed).
         placeholder.innerHTML = '';
 
         const originalSidebarHeader = document.querySelector('.sidebar .sidebar-header');
@@ -3674,16 +3690,39 @@
         placeholder.appendChild(mobileChatListDiv);
         renderChatList(mobileChatListDiv);
 
-        globalThemeToggleBtn = document.getElementById('themeToggle');
-        if (globalThemeToggleBtn && globalThemeToggleBtn.parentElement !== placeholder) {
-             placeholder.appendChild(globalThemeToggleBtn);
-        }
+        // If original elements existed, move them into the placeholder.
+        if (themeBtn && themeBtn.parentElement !== placeholder) {{
+            placeholder.appendChild(themeBtn);
+        }} else if (!themeBtn) {{
+            // Recreate from template (no event listeners are preserved — we rebind globals below).
+            const tmp = document.createElement('div');
+            tmp.innerHTML = themeTemplate;
+            const newBtn = tmp.firstElementChild;
+            if (newBtn) placeholder.appendChild(newBtn);
+        }}
 
+        if (settingsBtn && settingsBtn.parentElement !== placeholder) {{
+            placeholder.appendChild(settingsBtn);
+        }} else if (!settingsBtn) {{
+            const tmp2 = document.createElement('div');
+            tmp2.innerHTML = settingsTemplate;
+            const newBtn2 = tmp2.firstElementChild;
+            if (newBtn2) placeholder.appendChild(newBtn2);
+        }}
+
+        // Re-resolve globals so other code that attaches handlers can find these elements.
+        globalThemeToggleBtn = document.getElementById('themeToggle');
         globalToggleSettingsBtn = document.getElementById('toggleSettingsBtn');
-        if (globalToggleSettingsBtn && globalToggleSettingsBtn.parentElement !== placeholder) {
-            placeholder.appendChild(globalToggleSettingsBtn);
-        }
-    }
+
+        // If there are initialization functions that attach listeners, call them here.
+        if (typeof attachThemeToggleHandlers === 'function') {{
+            attachThemeToggleHandlers(globalThemeToggleBtn);
+        }}
+        if (typeof attachSettingsHandlers === 'function') {{
+            attachSettingsHandlers(globalToggleSettingsBtn);
+        }}
+    }}
+
 
     function restoreDesktopElements() {
         const themeToggleInHamburger = mobileMenuItemsPlaceholder.querySelector('#themeToggle');
