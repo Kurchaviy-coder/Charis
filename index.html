@@ -6781,56 +6781,71 @@ const mobileSettingsHTML = `<div class="tab-buttons"><button class="active" oncl
 <textarea aria-label="Память нейросети" class="memory-box" id="neuralMemory" placeholder="Заметки и контекст, которые бот будет помнить глобально..." spellcheck="true"></textarea>
 </fieldset></div>`;
 
+let _settingsLayoutIsMobile = null;
 function applySettingsLayout() {
   const container = document.getElementById('settingsSection');
-  if(!container) return;
-  const w = window.innerWidth || document.documentElement.clientWidth;
-  if (w > 900) {
-    // PC: restore original layout (if not already)
+  if (!container) return;
+  const nowIsMobile = window.innerWidth <= 900;
+
+  // If layout mode didn't change (only height changed - e.g. keyboard), skip.
+  if (_settingsLayoutIsMobile === nowIsMobile) return;
+
+  // If user is actively editing inside settings, avoid swapping layout mid-edit.
+  try {
+    const active = document.activeElement;
+    if (container.contains(active) && (['INPUT','TEXTAREA','SELECT'].includes(active.tagName) || active.isContentEditable)) {
+      return;
+    }
+  } catch (e) { /* ignore */ }
+
+  // Preserve values of inputs by id before replacing innerHTML.
+  const fields = Array.from(container.querySelectorAll('input,textarea,select'));
+  const saved = {};
+  fields.forEach(f => {
+    if (!f.id) return;
+    saved[f.id] = { value: f.value, checked: f.checked, selectedIndex: f.selectedIndex };
+  });
+
+  if (!nowIsMobile) {
     if (container.innerHTML.trim() !== originalSettingsHTML.trim()) {
       container.innerHTML = originalSettingsHTML;
-      // reattach any JS bindings if needed (basic)
-      if (typeof initSettingsBindings === 'function') initSettingsBindings();
     }
-    // hide mobile tab buttons if any exist
-    const tb = document.querySelectorAll('.settings-content .tab-buttons');
-    tb.forEach(b => b.style.display = 'none');
   } else {
-    // Mobile: use tabbed layout (if not already)
     if (container.innerHTML.trim() !== mobileSettingsHTML.trim()) {
       container.innerHTML = mobileSettingsHTML;
-      // ensure first tab active
-      const btns = container.querySelectorAll('.tab-buttons button');
-      if (btns && btns.length > 0) btns[0].classList.add('active');
-      // run mobile tab initializer if exists
-      if (typeof initMobileTabs === 'function') initMobileTabs();
-      if (typeof initSettingsBindings === 'function') initSettingsBindings();
     }
-    // show mobile tab buttons
-    const tb = document.querySelectorAll('.settings-content .tab-buttons');
-    tb.forEach(b => b.style.display = 'flex');
   }
+
+  // Re-init bindings and mobile tabs if available
+  if (typeof initMobileTabs === 'function') initMobileTabs();
+  if (typeof initSettingsBindings === 'function') initSettingsBindings();
+
+  // Try to restore saved values
+  Object.keys(saved).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    try {
+      if (el.tagName === 'SELECT') el.selectedIndex = saved[id].selectedIndex;
+      else if (el.type === 'checkbox' || el.type === 'radio') el.checked = saved[id].checked;
+      else el.value = saved[id].value;
+    } catch (e) {}
+  });
+
+  // Ensure model select lists and character select are repopulated
+  if (typeof populateGoogleApiModelSelect === 'function') populateGoogleApiModelSelect();
+  if (typeof populateCharacterSelect === 'function') populateCharacterSelect();
+  // loadSettings will refresh values from localStorage if available
+  if (typeof loadSettings === 'function') loadSettings();
+
+  _settingsLayoutIsMobile = nowIsMobile;
 }
 
-// helper in case other functions need to rebind
-function initMobileTabs() {
-  // ensure openSettingsTab exists
-  if (typeof openSettingsTab !== 'function') return;
-  // activate first tab
-  const btns = document.querySelectorAll('.settings-content .tab-buttons button');
-  if (btns.length) btns.forEach((b,i)=> b.classList.toggle('active', i===0));
-  const pages = document.querySelectorAll('.settings-content .tab-page');
-  pages.forEach((p,i)=> p.classList.toggle('active', i===0));
-}
-
-// expose a simple initializer for other scripts
-function initSettingsBindings() {
-  // nothing heavy for now; placeholder to reattach event handlers if needed
-}
-
-// switch on load and resize
-window.addEventListener('DOMContentLoaded', applySettingsLayout);
-window.addEventListener('resize', applySettingsLayout);
+// Run once on DOM ready, and on resize (debounced). Avoid swapping on small height changes.
+window.addEventListener('DOMContentLoaded', function(){ applySettingsLayout(); });
+window.addEventListener('resize', function(){
+  clearTimeout(window._settingsResizeTimeout);
+  window._settingsResizeTimeout = setTimeout(applySettingsLayout, 150);
+});
 </script>
 <script>
 function openSettingsTab(tabIndex) {
