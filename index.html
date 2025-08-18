@@ -10395,5 +10395,44 @@ window.addEventListener('resize', applySettingsLayout);
 })();</script>
 <!-- END IMPORTED MODAL SCRIPTS -->
 
+
+<!-- LOCALSTORAGE_MAXTOKENS_TEMPERATURE_INJECTED -->
+<script>
+// Сохранение/восстановление Max tokens и Temperature в localStorage
+(function(){
+  function safeGet(id){ try { return document.getElementById(id); } catch(e){ return null; } }
+  function initSettingsPersistence() { 
+    const maxEl = safeGet('maxTokens');
+    const tempEl = safeGet('temperature');
+    if (!maxEl && !tempEl) return;
+    try {
+      // Restore if present in localStorage (use strict null check)
+      const sMax = localStorage.getItem('maxTokens');
+      const sTemp = localStorage.getItem('temperature');
+      if (sMax !== null && maxEl) maxEl.value = sMax;
+      if (sTemp !== null && tempEl) tempEl.value = sTemp;
+    } catch(e){ console.warn('localStorage read error', e); }
+
+    // Save on input/change (both to be responsive)
+    function saveMax(){ try{ if (maxEl) localStorage.setItem('maxTokens', maxEl.value); }catch(e){console.warn(e);} }
+    function saveTemp(){ try{ if (tempEl) localStorage.setItem('temperature', tempEl.value); }catch(e){console.warn(e);} }
+
+    if (maxEl) { maxEl.addEventListener('input', saveMax); maxEl.addEventListener('change', saveMax); }
+    if (tempEl) { tempEl.addEventListener('input', saveTemp); tempEl.addEventListener('change', saveTemp); }
+
+    // Also expose a small helper in case other scripts want to programmatically reset defaults
+    window.__charis_settings_persistence = {
+      save: function(){ saveMax(); saveTemp(); },
+      restore: function(){ try{ if (maxEl && localStorage.getItem('maxTokens')!==null) maxEl.value = localStorage.getItem('maxTokens'); if (tempEl && localStorage.getItem('temperature')!==null) tempEl.value = localStorage.getItem('temperature'); }catch(e){console.warn(e);} },
+      clear: function(){ try{ localStorage.removeItem('maxTokens'); localStorage.removeItem('temperature'); }catch(e){console.warn(e);} }
+    };
+  }
+
+  // Run on load to avoid races with other initialization code
+  if (document.readyState === 'complete') initSettingsPersistence(); 
+  else window.addEventListener('load', initSettingsPersistence);
+})();
+</script>
+
 </body>
 </html>
