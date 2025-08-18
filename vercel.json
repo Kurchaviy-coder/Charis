@@ -1,8 +1,21 @@
 {
-  "rewrites": [
-    { "source": "/(robots.txt|sitemap.xml)", "destination": "/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        { "key": "Content-Type", "value": "application/xml" }
+      ]
+    },
+    {
+      "source": "/robots.txt",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
