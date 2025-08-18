@@ -3542,7 +3542,7 @@
 <input accept="image/*,application/*,text/*,*/*" id="fileInput" multiple="" style="display:none;" type="file"/>
 <script>
     // --- Global Variables and Constants ---
-    let currentMode = "personal";
+    if (typeof window.currentMode === 'undefined') window.currentMode = "personal";
     let characters = {};
     let activeCharacter = null;
     let attachedFiles = [];
@@ -6591,7 +6591,8 @@ function showCustomConfirm(message, onConfirm) {
   </script>
 <script>
 // Original (PC) settings content (from original file)
-const originalSettingsHTML = `
+if (typeof window.originalSettingsHTML === 'undefined') {
+  window.originalSettingsHTML = `
 <fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
 <label for="apiKey">Ключ API (LLM):</label>
 <input aria-label="Ключ API LLM" autocomplete="off" id="apiKey" placeholder="Введите ваш API ключ" type="password"/>
@@ -6724,6 +6725,8 @@ const originalSettingsHTML = `
 <button onclick="openBackgroundModal()" type="button">🖼️ Фон чата</button>
 </div>
 `;
+}
+
 // Mobile (tabbed) settings content (from modified file)
 const mobileSettingsHTML = `<div class="tab-buttons"><button class="active" onclick="openSettingsTab(1)" type="button">🔌 Настройки API LLM (По умолчанию)</button><button onclick="openSettingsTab(2)" type="button">🇬 Настройки Google Gemini API</button><button onclick="openSettingsTab(3)" type="button">🔗 Настройки REST API</button><button onclick="openSettingsTab(4)" type="button">👤 Основные настройки Персонажа</button><button onclick="openSettingsTab(5)" type="button">📝 Описание и личность</button><button onclick="openSettingsTab(6)" type="button">📖 Сценарий и примеры диалога</button><button onclick="openSettingsTab(7)" type="button">👋 Приветствия</button><button onclick="openSettingsTab(8)" type="button">⚙️ Дополнительные инструкции для ИИ</button><button onclick="openSettingsTab(9)" type="button">🎨 Настройки оформления</button><button onclick="openSettingsTab(10)" type="button">🖼️ Аватары</button><button onclick="openSettingsTab(11)" type="button">🧠 Память ИИ (Общая)</button></div><div class="tab-page active" id="settingsTab1"><fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
 <label for="apiKey">Ключ API (LLM):</label>
@@ -7074,7 +7077,7 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
 <!-- MODAL SCRIPTS IMPORTED FROM index_animation_fixed.html -->
 <script>
     // --- Global Variables and Constants ---
-    let currentMode = "personal";
+    if (typeof window.currentMode === 'undefined') window.currentMode = "personal";
     let characters = {};
     let activeCharacter = null;
     let attachedFiles = [];
@@ -10048,7 +10051,8 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
 
 <script>
 // Original (PC) settings content (from original file)
-const originalSettingsHTML = `
+if (typeof window.originalSettingsHTML === 'undefined') {
+  window.originalSettingsHTML = `
 <fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
 <label for="apiKey">Ключ API (LLM):</label>
 <input aria-label="Ключ API LLM" autocomplete="off" id="apiKey" placeholder="Введите ваш API ключ" type="password"/>
@@ -10181,6 +10185,8 @@ const originalSettingsHTML = `
 <button onclick="openBackgroundModal()" type="button">🖼️ Фон чата</button>
 </div>
 `;
+}
+
 // Mobile (tabbed) settings content (from modified file)
 const mobileSettingsHTML = `<div class="tab-buttons"><button class="active" onclick="openSettingsTab(1)" type="button">🔌 Настройки API LLM (По умолчанию)</button><button onclick="openSettingsTab(2)" type="button">🇬 Настройки Google Gemini API</button><button onclick="openSettingsTab(3)" type="button">🔗 Настройки REST API</button><button onclick="openSettingsTab(4)" type="button">👤 Основные настройки Персонажа</button><button onclick="openSettingsTab(5)" type="button">📝 Описание и личность</button><button onclick="openSettingsTab(6)" type="button">📖 Сценарий и примеры диалога</button><button onclick="openSettingsTab(7)" type="button">👋 Приветствия</button><button onclick="openSettingsTab(8)" type="button">⚙️ Дополнительные инструкции для ИИ</button><button onclick="openSettingsTab(9)" type="button">🎨 Настройки оформления</button><button onclick="openSettingsTab(10)" type="button">🖼️ Аватары</button><button onclick="openSettingsTab(11)" type="button">🧠 Память ИИ (Общая)</button></div><div class="tab-page active" id="settingsTab1"><fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
 <label for="apiKey">Ключ API (LLM):</label>
