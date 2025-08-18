@@ -4267,9 +4267,27 @@ function setupMobileHamburgerMenu() {{
       document.getElementById("enableGoogleApi").checked = useGoogleApi;
 
 
+
       if (!activeCharacter && Object.keys(characters).length > 0) {
         activeCharacter = Object.keys(characters)[0];
       }
+
+      // --- Restore temperature and maxTokens from localStorage (ensure persistence even after dynamic settings re-render) ---
+      try {
+        const storedTemp = localStorage.getItem('temperature');
+        const storedMax = localStorage.getItem('maxTokens');
+        const tempEl = document.getElementById('temperature');
+        const maxEl = document.getElementById('maxTokens');
+        if (tempEl && storedTemp !== null) tempEl.value = storedTemp;
+        if (maxEl && storedMax !== null) maxEl.value = storedMax;
+
+        // Attach listeners so future changes are persisted (idempotent)
+        function saveTemp() { try { if (tempEl) localStorage.setItem('temperature', tempEl.value); } catch(e){console.warn(e);} }
+        function saveMax() { try { if (maxEl) localStorage.setItem('maxTokens', maxEl.value); } catch(e){console.warn(e);} }
+        if (tempEl && !tempEl.__charis_persist_attached) { tempEl.addEventListener('input', saveTemp); tempEl.addEventListener('change', saveTemp); tempEl.__charis_persist_attached = true; }
+        if (maxEl && !maxEl.__charis_persist_attached) { maxEl.addEventListener('input', saveMax); maxEl.addEventListener('change', saveMax); maxEl.__charis_persist_attached = true; }
+      } catch(e){ console.warn('settings persistence injection error', e); }
+
       populateCharacterSelect();
     }
     function loadNeuralMemory() {
@@ -7742,9 +7760,27 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
       document.getElementById("enableGoogleApi").checked = useGoogleApi;
 
 
+
       if (!activeCharacter && Object.keys(characters).length > 0) {
         activeCharacter = Object.keys(characters)[0];
       }
+
+      // --- Restore temperature and maxTokens from localStorage (ensure persistence even after dynamic settings re-render) ---
+      try {
+        const storedTemp = localStorage.getItem('temperature');
+        const storedMax = localStorage.getItem('maxTokens');
+        const tempEl = document.getElementById('temperature');
+        const maxEl = document.getElementById('maxTokens');
+        if (tempEl && storedTemp !== null) tempEl.value = storedTemp;
+        if (maxEl && storedMax !== null) maxEl.value = storedMax;
+
+        // Attach listeners so future changes are persisted (idempotent)
+        function saveTemp() { try { if (tempEl) localStorage.setItem('temperature', tempEl.value); } catch(e){console.warn(e);} }
+        function saveMax() { try { if (maxEl) localStorage.setItem('maxTokens', maxEl.value); } catch(e){console.warn(e);} }
+        if (tempEl && !tempEl.__charis_persist_attached) { tempEl.addEventListener('input', saveTemp); tempEl.addEventListener('change', saveTemp); tempEl.__charis_persist_attached = true; }
+        if (maxEl && !maxEl.__charis_persist_attached) { maxEl.addEventListener('input', saveMax); maxEl.addEventListener('change', saveMax); maxEl.__charis_persist_attached = true; }
+      } catch(e){ console.warn('settings persistence injection error', e); }
+
       populateCharacterSelect();
     }
     function loadNeuralMemory() {
