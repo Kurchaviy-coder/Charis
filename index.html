@@ -10511,5 +10511,43 @@ window.addEventListener('resize', applySettingsLayout);
 </script>
 
 
+
+<!-- === Chat History Safe-Save Patch === -->
+<script>
+(function() {
+    function safeSetItem(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            console.warn("⚠ История не сохранена: превышен лимит памяти.", e);
+        }
+    }
+
+    // Перехват сохранения сообщений
+    window.saveChatHistory = function(messages) {
+        const cleaned = messages.map(msg => {
+            if (msg.attachments) {
+                msg.attachments = msg.attachments.map(file => {
+                    if (file.data && file.data.length > 50000) { // base64 слишком длинный
+                        const blob = new Blob([file.data], { type: file.type || "application/octet-stream" });
+                        const url = URL.createObjectURL(blob);
+                        return {
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            previewUrl: url // сохраняем ссылку вместо base64
+                        };
+                    }
+                    return file;
+                });
+            }
+            return msg;
+        });
+        safeSetItem("chatHistory", JSON.stringify(cleaned));
+    };
+})();
+</script>
+<!-- === End Patch === -->
+
 </body>
 </html>
