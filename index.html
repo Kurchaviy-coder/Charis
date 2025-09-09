@@ -10521,12 +10521,24 @@ window.addEventListener('resize', applySettingsLayout);
   const GEMINI_API_URL_PREFIX = 'https://generativelanguage.googleapis.com/';
   const FALLBACK_ON_ERROR = false;
   let useCloudflareRedirect = localStorage.getItem(CLOUDFLARE_ENABLED_STORAGE_KEY) === 'true';
+
   function addCloudflareCheckbox() {
-    if (document.getElementById(CLOUDFLARE_CHECKBOX_ID)) return;
     const googleApiSwitch = document.getElementById('enableGoogleApi');
-    if (!googleApiSwitch) return;
-    const parent = googleApiSwitch.closest('.switch')?.parentElement || googleApiSwitch.parentElement;
-    if (!parent) return;
+    const settingsSection = document.getElementById('settingsSection');
+    
+    let targetParent = null;
+    if (googleApiSwitch) {
+      targetParent = googleApiSwitch.closest('.switch')?.parentElement || googleApiSwitch.parentElement;
+    } else if (settingsSection) {
+      targetParent = settingsSection;
+    } else {
+      targetParent = document.body;
+    }
+
+    if (!targetParent || document.getElementById(CLOUDFLARE_CHECKBOX_ID)) {
+      return;
+    }
+
     const wrapper = document.createElement('div');
     wrapper.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:0.6rem;';
     wrapper.innerHTML = `
@@ -10538,7 +10550,8 @@ window.addEventListener('resize', applySettingsLayout);
         <span class="slider round"></span>
       </label>
     `;
-    parent.appendChild(wrapper);
+    targetParent.appendChild(wrapper);
+    
     const cb = document.getElementById(CLOUDFLARE_CHECKBOX_ID);
     cb.checked = useCloudflareRedirect;
     cb.addEventListener('change', e => {
@@ -10547,6 +10560,7 @@ window.addEventListener('resize', applySettingsLayout);
       console.log('[cloudflare_redirect] useCloudflareRedirect =', useCloudflareRedirect);
     });
   }
+  
   function buildHeaders(src) {
     const h = new Headers();
     if (!src) return h;
@@ -10562,6 +10576,7 @@ window.addEventListener('resize', applySettingsLayout);
     }
     return h;
   }
+
   function patchFetch() {
     if (window.fetch.isPatched) return;
     const originalFetch = window.fetch.bind(window);
@@ -10607,25 +10622,28 @@ window.addEventListener('resize', applySettingsLayout);
     window.fetch.isPatched = true;
     console.log('[cloudflare_redirect] fetch patched.');
   }
-  const observer = new MutationObserver(() => {
+  
+  function init() {
     addCloudflareCheckbox();
     patchFetch();
-  });
-  function init() {
-    try {
-      addCloudflareCheckbox();
-      patchFetch();
-      const target = document.getElementById('settingsSection') || document.body;
-      observer.observe(target, { childList: true, subtree: true });
-    } catch (e) {
-      console.error('[cloudflare_redirect] init failed', e);
-    }
   }
+
+  const observer = new MutationObserver(() => {
+    const googleApiSwitch = document.getElementById('enableGoogleApi');
+    const settingsSection = document.getElementById('settingsSection');
+    
+    if (googleApiSwitch || settingsSection) {
+      observer.disconnect();
+      init();
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     init();
   } else {
     window.addEventListener('load', init);
-    setTimeout(init, 1000);
   }
 })();
 </script>
