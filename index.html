@@ -10513,140 +10513,159 @@ window.addEventListener('resize', applySettingsLayout);
 
 
 <script>
-(function() {
+(function () {
   'use strict';
-  const CLOUDFLARE_ENABLED_STORAGE_KEY = 'enableCloudflareRedirect_v1';
-  const CLOUDFLARE_WORKER_URL = 'https://gemini-proxy.xlebovichxleb140.workers.dev/';
-  const CLOUDFLARE_CHECKBOX_ID = 'enableCloudflareRedirect';
-  const GEMINI_API_URL_PREFIX = 'https://generativelanguage.googleapis.com/';
-  const FALLBACK_ON_ERROR = false;
-  let useCloudflareRedirect = localStorage.getItem(CLOUDFLARE_ENABLED_STORAGE_KEY) === 'true';
 
+  // ---- настройки ----
+  var CLOUDFLARE_ENABLED_STORAGE_KEY = 'enableCloudflareRedirect_v1';
+  var CLOUDFLARE_WORKER_URL = 'https://gemini-proxy.xlebovichxleb140.workers.dev/';
+  var CLOUDFLARE_CHECKBOX_ID = 'enableCloudflareRedirect';
+  var GEMINI_API_URL_PREFIX = 'https://generativelanguage.googleapis.com/';
+  var FALLBACK_ON_ERROR = false;
+
+  // ---- безопасная работа с localStorage (на всякий случай для прод-окружений/CSP) ----
+  function safeGetLS(key) { try { return window.localStorage.getItem(key); } catch (e) { return null; } }
+  function safeSetLS(key, val) { try { window.localStorage.setItem(key, val); } catch (e) {} }
+
+  var useCloudflareRedirect = safeGetLS(CLOUDFLARE_ENABLED_STORAGE_KEY) === 'true';
+
+  // ---- чекбокс в настройках ----
   function addCloudflareCheckbox() {
-    const googleApiSwitch = document.getElementById('enableGoogleApi');
-    const settingsSection = document.getElementById('settingsSection');
-    
-    let targetParent = null;
+    var googleApiSwitch = document.getElementById('enableGoogleApi');
+    var settingsSection = document.getElementById('settingsSection');
+
+    var targetParent = null;
     if (googleApiSwitch) {
-      targetParent = googleApiSwitch.closest('.switch')?.parentElement || googleApiSwitch.parentElement;
+      // ищем ближайший .switch и берём его родителя (без optional chaining для кроссбраузерности)
+      var node = googleApiSwitch;
+      var wrapper = null;
+      while (node && node.nodeType === 1) {
+        if ((node.className || '').indexOf('switch') !== -1) { wrapper = node; break; }
+        node = node.parentElement;
+      }
+      targetParent = (wrapper && wrapper.parentElement) ? wrapper.parentElement : googleApiSwitch.parentElement;
     } else if (settingsSection) {
       targetParent = settingsSection;
     } else {
-      targetParent = document.body;
+      targetParent = document.body || document.documentElement;
     }
 
-    if (!targetParent || document.getElementById(CLOUDFLARE_CHECKBOX_ID)) {
-      return;
-    }
+    if (!targetParent || document.getElementById(CLOUDFLARE_CHECKBOX_ID)) return;
 
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:0.6rem;';
-    wrapper.innerHTML = `
-      <label for="${CLOUDFLARE_CHECKBOX_ID}" style="font-weight:500;">
-        <strong>Cloudflare</strong>: проксировать запросы Gemini
-      </label>
-      <label class="switch">
-        <input type="checkbox" id="${CLOUDFLARE_CHECKBOX_ID}">
-        <span class="slider round"></span>
-      </label>
-    `;
-    targetParent.appendChild(wrapper);
-    
-    const cb = document.getElementById(CLOUDFLARE_CHECKBOX_ID);
-    cb.checked = useCloudflareRedirect;
-    cb.addEventListener('change', e => {
-      useCloudflareRedirect = e.target.checked;
-      localStorage.setItem(CLOUDFLARE_ENABLED_STORAGE_KEY, useCloudflareRedirect);
-      console.log('[cloudflare_redirect] useCloudflareRedirect =', useCloudflareRedirect);
-    });
+    var wrapperDiv = document.createElement('div');
+    wrapperDiv.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:0.6rem;';
+    wrapperDiv.innerHTML =
+      '<label for="' + CLOUDFLARE_CHECKBOX_ID + '" style="font-weight:500;">' +
+        '<strong>Cloudflare</strong>: проксировать запросы Gemini' +
+      '</label>' +
+      '<label class="switch">' +
+        '<input type="checkbox" id="' + CLOUDFLARE_CHECKBOX_ID + '">' +
+        '<span class="slider round"></span>' +
+      '</label>';
+
+    targetParent.appendChild(wrapperDiv);
+
+    var cb = document.getElementById(CLOUDFLARE_CHECKBOX_ID);
+    if (cb) {
+      cb.checked = useCloudflareRedirect;
+      cb.addEventListener('change', function (e) {
+        useCloudflareRedirect = !!e.target.checked;
+        safeSetLS(CLOUDFLARE_ENABLED_STORAGE_KEY, useCloudflareRedirect ? 'true' : 'false');
+        console.log('[cloudflare_redirect] enabled =', useCloudflareRedirect);
+      });
+    }
   }
-  
+
+  // ---- утилита: нормализовать заголовки ----
   function buildHeaders(src) {
-    const h = new Headers();
+    var h = new Headers();
     if (!src) return h;
     if (src instanceof Headers) {
-      for (const [k, v] of src.entries()) h.set(k, v);
+      src.forEach(function (v, k) { h.set(k, v); });
     } else if (Array.isArray(src)) {
-      for (const [k, v] of src) h.set(k, v);
+      for (var i = 0; i < src.length; i++) { h.set(src[i][0], src[i][1]); }
     } else if (typeof src === 'object') {
-      for (const k of Object.keys(src)) {
-        const v = src[k];
-        if (v != null) h.set(k, String(v));
-      }
+      for (var k in src) if (Object.prototype.hasOwnProperty.call(src, k) && src[k] != null) h.set(k, String(src[k]));
     }
     return h;
   }
 
+  // ---- патчим fetch максимально безопасно для прод/верчел ----
   function patchFetch() {
-    if (window.fetch.isPatched) return;
-    const originalFetch = window.fetch.bind(window);
-    window.fetch = async function(input, init = {}) {
+    if (!('fetch' in window)) { console.warn('[cloudflare_redirect] window.fetch отсутствует'); return; }
+    if (window.fetch && window.fetch.__cf_patched) return;
+
+    var originalFetch = window.fetch.bind(window);
+
+    window.fetch = function (input, init) {
+      init = init || {};
       try {
-        const isRequestObj = input instanceof Request;
-        const origUrl = isRequestObj ? input.url : String(input || '');
-        if (!useCloudflareRedirect || !origUrl.startsWith(GEMINI_API_URL_PREFIX)) {
+        var isRequestObj = (typeof Request !== 'undefined') && (input instanceof Request);
+        var origUrl = isRequestObj ? input.url : String(input || '');
+
+        if (!useCloudflareRedirect || origUrl.indexOf(GEMINI_API_URL_PREFIX) !== 0) {
           return originalFetch(input, init);
         }
-        console.log('[cloudflare_redirect] intercepting:', origUrl);
-        const srcHeaders = buildHeaders(init.headers || (isRequestObj ? input.headers : null));
+
+        console.log('[cloudflare_redirect] →', origUrl);
+
+        var srcHeaders = buildHeaders(init.headers || (isRequestObj ? input.headers : null));
         srcHeaders.set('X-Original-URL', origUrl);
-        const method = (init.method || (isRequestObj ? input.method : 'POST')).toUpperCase();
-        let body = init.body;
-        if (body == null && isRequestObj) {
-          body = input.body;
-        }
-        const fetchOptions = {
-          method,
-          headers: srcHeaders,
-          body,
-          credentials: init.credentials || (isRequestObj ? input.credentials : undefined),
-          redirect: init.redirect || (isRequestObj ? input.redirect : undefined),
-          referrer: init.referrer || (isRequestObj ? input.referrer : undefined),
-          referrerPolicy: init.referrerPolicy || (isRequestObj ? input.referrerPolicy : undefined),
-        };
-        try {
-          return await originalFetch(CLOUDFLARE_WORKER_URL, fetchOptions);
-        } catch (err) {
-          console.error('[cloudflare_redirect] fetch to worker failed:', err);
+
+        var method = String((init.method || (isRequestObj ? input.method : 'POST')) || 'POST').toUpperCase();
+        var body = (init.body != null) ? init.body : (isRequestObj ? input.body : null);
+
+        var fetchOptions = { method: method, headers: srcHeaders };
+        if (body != null) fetchOptions.body = body;
+        if (init && 'credentials' in init) fetchOptions.credentials = init.credentials;
+        if (init && 'redirect' in init)    fetchOptions.redirect    = init.redirect;
+        if (init && 'referrer' in init)    fetchOptions.referrer    = init.referrer;
+        if (init && 'referrerPolicy' in init) fetchOptions.referrerPolicy = init.referrerPolicy;
+
+        return originalFetch(CLOUDFLARE_WORKER_URL, fetchOptions).catch(function (err) {
+          console.error('[cloudflare_redirect] запрос к воркеру упал:', err);
           if (FALLBACK_ON_ERROR) {
-            console.warn('[cloudflare_redirect] falling back to original URL (may fail for geo-blocked requests)');
+            console.warn('[cloudflare_redirect] fallback → исходный URL');
             return originalFetch(input, init);
           }
           throw err;
-        }
+        });
       } catch (outerErr) {
-        console.error('[cloudflare_redirect] unexpected patch error:', outerErr);
+        console.error('[cloudflare_redirect] непредвиденная ошибка:', outerErr);
         return originalFetch(input, init);
       }
     };
-    window.fetch.isPatched = true;
+
+    window.fetch.__cf_patched = true;
     console.log('[cloudflare_redirect] fetch patched.');
   }
-  
+
+  function runWhenReady(fn) {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') fn();
+    else window.addEventListener('DOMContentLoaded', fn);
+  }
+
   function init() {
     addCloudflareCheckbox();
     patchFetch();
   }
 
-  const observer = new MutationObserver(() => {
-    const googleApiSwitch = document.getElementById('enableGoogleApi');
-    const settingsSection = document.getElementById('settingsSection');
-    
-    if (googleApiSwitch || settingsSection) {
-      observer.disconnect();
-      init();
-    }
-  });
+  // стартуем и на DOMReady, и когда позже дорисуются настройки
+  runWhenReady(init);
 
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    init();
-  } else {
-    window.addEventListener('load', init);
+  try {
+    var observer = new MutationObserver(function () {
+      var googleApiSwitch = document.getElementById('enableGoogleApi');
+      var settingsSection = document.getElementById('settingsSection');
+      if (googleApiSwitch || settingsSection) init();
+    });
+    if (document.body) observer.observe(document.body, { childList: true, subtree: true });
+  } catch (e) {
+    // старые браузеры без MutationObserver — просто игнор
   }
 })();
 </script>
+
 
 </body>
 </html>
