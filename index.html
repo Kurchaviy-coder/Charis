@@ -3317,6 +3317,64 @@
 </style>
 <!-- END IMPORTED MODAL STYLES -->
 
+
+<!-- AUTO-INJECT: fixes for checkbox layout and appearance -->
+<style>
+/* Force vertical layout for settings switches and checkbox blocks */
+#settingsModal .settings-content div[style*="display: flex; align-items: center"] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+}
+
+/* For any dynamically created wrapper with inline flex row, prefer column */
+#settingsModal .settings-content .switch,
+#settingsModal .settings-content .switch + label,
+#settingsModal .settings-content .switch-wrapper {
+  align-self: flex-start;
+}
+
+/* Show native checkbox instead of custom slider inside settings modal */
+#settingsModal .settings-content .switch input[type="checkbox"] {
+  opacity: 1 !important;
+  width: 18px !important;
+  height: 18px !important;
+  position: relative !important;
+  margin: 0 !important;
+  appearance: checkbox !important;
+  -webkit-appearance: checkbox !important;
+  accent-color: #ff69b4 !important; /* pink accent */
+}
+
+/* Hide the custom slider UI inside settings modal to avoid stripe/bars */
+#settingsModal .settings-content .switch .slider {
+  display: none !important;
+}
+
+/* Label styling: ensure label stands above the checkbox */
+#settingsModal .settings-content label[for] {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+/* Generic option container fallback */
+.settings-content .option-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+/* Make sure on small screens layout stays vertical */
+@media (max-width: 900px) {
+  #settingsModal .settings-content div[style*="display: flex; align-items: center"] {
+    flex-direction: column !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <!-- Hamburger Menu Button (Mobile) -->
@@ -10802,7 +10860,150 @@ window.addEventListener('resize', applySettingsLayout);
     // старые браузеры без MutationObserver — просто игнор
   }
 })();
+<script>
+    (function() {
+        const CLOUDFLARE_CHECKBOX_ID = 'enableCloudflareRedirect';
+        const GOOGLE_API_SWITCH_ID = 'enableGoogleApi';
+
+        function applyLayoutFix() {
+            // Находим поле, где находятся настройки Gemini API
+            const settingsContainer = document.querySelector('#settingsTab4 fieldset');
+            if (!settingsContainer) {
+                console.warn('Не удалось найти контейнер настроек Gemini. Исправление не применено.');
+                return;
+            }
+
+            // Находим существующий элемент Cloudflare и его родительский контейнер
+            const cloudflareInput = document.getElementById(CLOUDFLARE_CHECKBOX_ID);
+            if (!cloudflareInput) {
+                console.warn('Не удалось найти флажок Cloudflare. Возможно, он еще не был создан.');
+                return;
+            }
+
+            const existingWrapper = cloudflareInput.closest('div');
+            if (!existingWrapper) {
+                console.warn('Не удалось найти родительский контейнер флажка Cloudflare. Исправление не применено.');
+                return;
+            }
+
+            // Создаем новую, правильную структуру для флажка Cloudflare
+            const newCloudflareWrapper = document.createElement('div');
+            newCloudflareWrapper.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start; margin-top: 1rem;';
+
+            const cloudflareLabel = document.createElement('label');
+            cloudflareLabel.setAttribute('for', CLOUDFLARE_CHECKBOX_ID);
+            cloudflareLabel.textContent = 'Включить Cloudflare Worker для обхода цензуры';
+            
+            const cloudflareSwitchDiv = document.createElement('div');
+            cloudflareSwitchDiv.className = 'switch';
+            cloudflareSwitchDiv.appendChild(cloudflareInput);
+            cloudflareSwitchDiv.style.cssText = 'margin-top: 0.5rem;';
+
+            newCloudflareWrapper.appendChild(cloudflareLabel);
+            newCloudflareWrapper.appendChild(cloudflareSwitchDiv);
+
+            // Заменяем старую структуру на новую
+            settingsContainer.replaceChild(newCloudflareWrapper, existingWrapper);
+
+            // Также исправляем layout для флажка Google API, если он существует
+            const googleApiInput = document.getElementById(GOOGLE_API_SWITCH_ID);
+            if (googleApiInput) {
+                const googleApiWrapper = googleApiInput.closest('div');
+                if (googleApiWrapper) {
+                    googleApiWrapper.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 1rem;';
+                }
+            }
+
+            console.log('[layout_fix] Макет флажков успешно исправлен.');
+        }
+
+        // Запускаем исправление после полной загрузки страницы
+        window.addEventListener('load', applyLayoutFix);
+        
+        // Также используем MutationObserver, если элементы появляются динамически
+        const observer = new MutationObserver((mutations, obs) => {
+            const settingsModal = document.getElementById('settingsModal');
+            if (settingsModal && settingsModal.style.display !== 'none') {
+                if (document.getElementById(CLOUDFLARE_CHECKBOX_ID) && !document.getElementById(CLOUDFLARE_CHECKBOX_ID).closest('.fixed-layout')) {
+                    applyLayoutFix();
+                    // Дополнительный флаг, чтобы не запускать исправление снова
+                    document.getElementById(CLOUDFLARE_CHECKBOX_ID).closest('div').classList.add('fixed-layout');
+                }
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+
+    })();
 </script>
-<!-- END: Inline Cloudflare / Gemini proxy helper -->
+
+<!-- AUTO-INJECT: DOM fix script for settings checkboxes -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function fixSettingsCheckboxes() {
+    try {
+      const settingsContent = document.querySelector('#settingsModal .settings-content');
+      if (!settingsContent) return;
+
+      // Find inline-flex rows used for switches and convert to column layout
+      const rows = settingsContent.querySelectorAll('div[style*="display: flex"][style*="align-items"]');
+      rows.forEach(row => {
+        // only affect rows that contain a .switch or input[type=checkbox]
+        if (row.querySelector('.switch') || row.querySelector('input[type="checkbox"]')) {
+          row.style.display = 'flex';
+          row.style.flexDirection = 'column';
+          row.style.alignItems = 'flex-start';
+          row.style.gap = '6px';
+        }
+      });
+
+      // For each .switch in settings, show native checkbox and hide slider span
+      const switches = settingsContent.querySelectorAll('.switch');
+      switches.forEach(sw => {
+        const input = sw.querySelector('input[type="checkbox"]');
+        const slider = sw.querySelector('.slider');
+        if (input) {
+          input.style.opacity = '1';
+          input.style.width = '18px';
+          input.style.height = '18px';
+          input.style.position = 'relative';
+          input.style.appearance = 'checkbox';
+          input.style.webkitAppearance = 'checkbox';
+          input.style.accentColor = '#ff69b4';
+        }
+        if (slider) slider.style.display = 'none';
+      });
+
+      // Ensure labels that are siblings to switches are above them
+      const labeledPairs = settingsContent.querySelectorAll('label[for]');
+      labeledPairs.forEach(lbl => {
+        const parent = lbl.parentElement;
+        if (parent && parent.querySelector('.switch')) {
+          // move label before switch if needed (usually already)
+          const sw = parent.querySelector('.switch');
+          if (sw && lbl.nextSibling !== sw) {
+            parent.insertBefore(lbl, sw);
+          }
+        }
+      });
+    } catch (e) {
+      console.warn('fixSettingsCheckboxes error', e);
+    }
+  }
+
+  // Try to run once now
+  fixSettingsCheckboxes();
+
+  // Observe DOM mutations (in case settings are loaded later)
+  const observer = new MutationObserver(function(muts) {
+    fixSettingsCheckboxes();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Also expose a manual function
+  window.__fixSettingsCheckboxes = fixSettingsCheckboxes;
+});
+</script>
+
 </body>
 </html>
