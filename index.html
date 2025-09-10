@@ -10680,6 +10680,43 @@ window.addEventListener('resize', applySettingsLayout);
     window.fetch.isPatched = true;
     console.log('[cloudflare_redirect] fetch patched.');
   }
+
+(function() {
+  try {
+    if (window.__cf_xhr_patched) return;
+    const origOpen = XMLHttpRequest.prototype.open;
+    const origSend = XMLHttpRequest.prototype.send;
+    const origSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
+    XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+      try {
+        this.__cf_original_url = url;
+        this.__cf_should_proxy = (typeof useCloudflareRedirect !== 'undefined' ? useCloudflareRedirect : false)
+                                 && (typeof url === 'string') && (typeof GEMINI_API_URL_PREFIX === 'string') && url.indexOf(GEMINI_API_URL_PREFIX) === 0;
+        if (this.__cf_should_proxy) {
+          return origOpen.call(this, method, (typeof CLOUDFLARE_WORKER_URL === 'string' ? CLOUDFLARE_WORKER_URL : '/'), async, user, password);
+        }
+      } catch (e) {
+        console.error('[cf_xhr_patch] open error', e);
+      }
+      return origOpen.call(this, method, url, async, user, password);
+    };
+    XMLHttpRequest.prototype.send = function(body) {
+      try {
+        if (this.__cf_should_proxy && this.__cf_original_url) {
+          try { origSetRequestHeader.call(this, 'X-Original-URL', this.__cf_original_url); } catch(e) {}
+        }
+      } catch(e) {
+        console.error('[cf_xhr_patch] send error', e);
+      }
+      return origSend.call(this, body);
+    };
+    window.__cf_xhr_patched = true;
+    console.log('[cf_xhr_patch] XMLHttpRequest patched for Cloudflare proxy');
+  } catch (e) {
+    console.error('[cf_xhr_patch] init error', e);
+  }
+})();
+
   
   function init() {
     addCloudflareCheckbox();
