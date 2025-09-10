@@ -2,6 +2,168 @@
 
 <html lang="ru">
 <head>
+
+<!-- CHARIS EARLY CLOUDflare PROXY PATCH (fetch + XHR) - single early instance -->
+<script>
+(function(){
+  if (window.__charis_cf_proxy_applied) return;
+  window.__charis_cf_proxy_applied = true;
+  try {
+    const DEFAULT_WORKER = (typeof CLOUDFLARE_WORKER_URL !== 'undefined') ? CLOUDFLARE_WORKER_URL : 'https://gemini-proxy.xlebovichxleb140.workers.dev/';
+    const GEMINI_PREFIX = 'https://generativelanguage.googleapis.com/';
+    const STORAGE_KEY = 'enableCloudflareRedirect_v1';
+    const FALLBACK_ON_ERROR = false;
+
+    function getUseCloudflare(){
+      try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch(e){ return false; }
+    }
+
+    function copySafeHeaders(src){
+      const h = new Headers();
+      try {
+        if (!src) return h;
+        if (typeof src.get === 'function') {
+          const ct = src.get('Content-Type') || src.get('content-type');
+          if (ct) h.set('Content-Type', ct);
+          const a = src.get('Authorization') || src.get('authorization');
+          if (a) h.set('Authorization', a);
+          const acc = src.get('Accept') || src.get('accept');
+          if (acc) h.set('Accept', acc);
+        } else if (typeof src === 'object') {
+          if (src['Content-Type']) h.set('Content-Type', src['Content-Type']);
+          if (src['content-type']) h.set('Content-Type', src['content-type']);
+          if (src['Authorization']) h.set('Authorization', src['Authorization']);
+          if (src['authorization']) h.set('Authorization', src['authorization']);
+          if (src['Accept']) h.set('Accept', src['Accept']);
+          if (src['accept']) h.set('Accept', src['accept']);
+        }
+      } catch(e){ /* noop */ }
+      return h;
+    }
+
+    // Patch fetch early
+    try {
+      if (typeof window.fetch === 'function' && !window.fetch.__charis_cf_patched) {
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = async function(input, init = {}) {
+          try {
+            const isRequest = (typeof Request !== 'undefined') && (input instanceof Request);
+            const origUrl = isRequest ? input.url : String(input || '');
+            if (!getUseCloudflare() || !origUrl.startsWith(GEMINI_PREFIX)) {
+              return originalFetch(input, init);
+            }
+
+            // build safe headers and mark the original URL
+            const srcHeaders = isRequest ? new Headers(input.headers || {}) : new Headers(init.headers || {});
+            const headers = copySafeHeaders(srcHeaders);
+            headers.set('X-Original-URL', origUrl);
+            headers.set('X-Client-Proxy', 'true');
+
+            // body handling: only when body is a string (JSON.stringify used)
+            let body = (init && init.body !== undefined) ? init.body : (isRequest ? input.body : undefined);
+            const contentType = headers.get('Content-Type') || '';
+            if (typeof body === 'string' && contentType.indexOf('application/json') !== -1) {
+              try {
+                const j = JSON.parse(body || '{}');
+                if (Array.isArray(j.contents) && j.contents.length > 0 && j.contents[0] && j.contents[0].role === 'model') {
+                  j.contents.push(j.contents.shift());
+                  body = JSON.stringify(j);
+                  headers.set('X-Worker-Fix', 'model-shifted');
+                  console.log('[charis-proxy] client fixed: moved model->end');
+                }
+              } catch(e) { /* ignore JSON parse errors */ }
+            }
+
+            const fetchOptions = {
+              method: (init && init.method) || (isRequest ? input.method : 'POST'),
+              headers: headers,
+              body: body,
+              redirect: (init && init.redirect) || (isRequest ? input.redirect : undefined),
+              credentials: (init && init.credentials) || (isRequest ? input.credentials : undefined),
+              referrer: (init && init.referrer) || (isRequest ? input.referrer : undefined),
+              referrerPolicy: (init && init.referrerPolicy) || (isRequest ? input.referrerPolicy : undefined)
+            };
+
+            return await originalFetch(DEFAULT_WORKER, fetchOptions);
+          } catch (err) {
+            console.error('[charis-proxy] fetch patch error', err);
+            if (FALLBACK_ON_ERROR) {
+              try { return originalFetch(input, init); } catch(e) { throw err; }
+            }
+            throw err;
+          }
+        };
+        // mark flags used also by other scripts so they don't re-patch
+        window.fetch.__charis_cf_patched = true;
+        window.fetch.__cf_patched = true;
+        window.fetch.isPatched = true;
+        console.log('[charis-proxy] fetch patched (early)');
+      }
+    } catch(e) { console.warn('[charis-proxy] fetch patch init failed', e); }
+
+    // Patch XHR early
+    try {
+      if (typeof XMLHttpRequest !== 'undefined' && !XMLHttpRequest.prototype.__charis_cf_xhr_patched) {
+        const origOpen = XMLHttpRequest.prototype.open;
+        const origSend = XMLHttpRequest.prototype.send;
+        const origSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
+
+        XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+          try {
+            this.__charis_original_url = url;
+            this.__charis_should_proxy = getUseCloudflare() && (typeof url === 'string') && url.indexOf(GEMINI_PREFIX) === 0;
+            if (this.__charis_should_proxy) {
+              return origOpen.call(this, method, DEFAULT_WORKER, async, user, password);
+            }
+          } catch(e) { console.error('[charis-proxy] xhr open error', e); }
+          return origOpen.call(this, method, url, async, user, password);
+        };
+
+        XMLHttpRequest.prototype.setRequestHeader = function(name, value) {
+          try {
+            const lname = String(name || '').toLowerCase();
+            if (lname === 'x-original-url' || lname === 'content-type' || lname === 'authorization' || lname === 'accept') {
+              return origSetRequestHeader.call(this, name, value);
+            }
+            // ignore other headers to avoid leaking UA/cookies by accident
+          } catch(e){}
+        };
+
+        XMLHttpRequest.prototype.send = function(body) {
+          try {
+            if (this.__charis_should_proxy && this.__charis_original_url) {
+              try { origSetRequestHeader.call(this, 'X-Original-URL', this.__charis_original_url); origSetRequestHeader.call(this, 'X-Client-Proxy', 'true'); } catch(e){}
+              // small safe auto-fix if body is string JSON
+              try {
+                if (typeof body === 'string' && body.trim().startsWith('{')) {
+                  try {
+                    const j = JSON.parse(body || '{}');
+                    if (Array.isArray(j.contents) && j.contents.length > 0 && j.contents[0] && j.contents[0].role === 'model') {
+                      j.contents.push(j.contents.shift());
+                      body = JSON.stringify(j);
+                      console.log('[charis-proxy] xhr client fixed: moved model->end');
+                    }
+                  } catch(e) {}
+                }
+              } catch(e){}
+            }
+          } catch(e){ console.error('[charis-proxy] xhr send wrapper error', e); }
+          return origSend.call(this, body);
+        };
+
+        XMLHttpRequest.prototype.__charis_cf_xhr_patched = true;
+        window.__cf_xhr_patched = true;
+        window.__charis_cf_proxy_applied = true;
+        console.log('[charis-proxy] XHR patched (early)');
+      }
+    } catch(e) { console.warn('[charis-proxy] XHR patch init failed', e); }
+
+  } catch(e) { console.error('[charis-proxy] early patch final error', e); }
+})();
+</script>
+<!-- END CHARIS EARLY PROXY PATCH -->
+
+
 <meta name="google-site-verification" content="EYT4iauhkHMs9bSBaXSbFaN8w72haQYJa4JE_JBFwmY" />
 <link rel="icon" href="/favicon.png" type="image/png" />
 <link rel="apple-touch-icon" href="/logo-1024.png" sizes="1024x1024" />
