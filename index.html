@@ -1104,6 +1104,188 @@
     .message.system { background: var(--bubble-system); color: #777; font-style: italic; font-size: 0.9em; max-width: 100%; text-align: center; }
     .dark-theme .message.system { color: #bbb; }
 
+    /* Code block styles */
+    .message pre {
+      position: relative;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 1rem;
+      border-radius: calc(var(--border-radius) - 4px);
+      overflow-x: auto;
+      margin: 0.75rem 0;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 0.9em;
+      line-height: 1.5;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .dark-theme .message pre {
+      background: #1a1a1a;
+      color: #e0e0e0;
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    .message pre code {
+      display: block;
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      border: none;
+      white-space: pre;
+      word-wrap: normal;
+      overflow-x: auto;
+    }
+    .message code {
+      background: rgba(var(--accent-color-rgb), 0.15);
+      color: var(--accent-color);
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 0.9em;
+      border: 1px solid rgba(var(--accent-color-rgb), 0.2);
+    }
+    .dark-theme .message code {
+      background: rgba(var(--accent-color-rgb), 0.25);
+      color: var(--accent-color);
+      border-color: rgba(var(--accent-color-rgb), 0.3);
+    }
+    .message pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border: none;
+    }
+    .code-block-wrapper {
+      position: relative;
+      margin: 0.75rem 0;
+    }
+    .code-block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.5rem 0.75rem;
+      border-radius: calc(var(--border-radius) - 4px) calc(var(--border-radius) - 4px) 0 0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: none;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .dark-theme .code-block-header {
+      background: rgba(0, 0, 0, 0.4);
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .code-block-header .code-language {
+      font-weight: 500;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.5px;
+    }
+    .code-copy-button {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    }
+    .code-copy-button:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .code-copy-button:active {
+      transform: translateY(0);
+    }
+    .code-copy-button.copied {
+      background: rgba(76, 175, 80, 0.3);
+      border-color: rgba(76, 175, 80, 0.5);
+      color: #4caf50;
+    }
+    .code-copy-button svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+    .code-block-buttons {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .code-download-button {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    }
+    .code-download-button:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .code-download-button:active {
+      transform: translateY(0);
+    }
+    .code-download-button svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+    .message pre {
+      margin-top: 0;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+    /* Mobile responsive code blocks */
+    @media (max-width: 768px) {
+      .message pre {
+        font-size: 0.85em;
+        padding: 0.75rem;
+      }
+      .code-block-header {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.7rem;
+      }
+      .code-copy-button {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+      }
+      .code-copy-button svg {
+        width: 12px;
+        height: 12px;
+      }
+      .code-download-button {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+      }
+      .code-download-button svg {
+        width: 12px;
+        height: 12px;
+      }
+      .code-block-buttons {
+        gap: 0.4rem;
+      }
+    }
+
     .message-buttons {
       display: flex;
       flex-direction: row;
@@ -2751,6 +2933,188 @@
     .message.system { background: var(--bubble-system); color: #777; font-style: italic; font-size: 0.9em; max-width: 100%; text-align: center; }
     .dark-theme .message.system { color: #bbb; }
 
+    /* Code block styles */
+    .message pre {
+      position: relative;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 1rem;
+      border-radius: calc(var(--border-radius) - 4px);
+      overflow-x: auto;
+      margin: 0.75rem 0;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 0.9em;
+      line-height: 1.5;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .dark-theme .message pre {
+      background: #1a1a1a;
+      color: #e0e0e0;
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    .message pre code {
+      display: block;
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      border: none;
+      white-space: pre;
+      word-wrap: normal;
+      overflow-x: auto;
+    }
+    .message code {
+      background: rgba(var(--accent-color-rgb), 0.15);
+      color: var(--accent-color);
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 0.9em;
+      border: 1px solid rgba(var(--accent-color-rgb), 0.2);
+    }
+    .dark-theme .message code {
+      background: rgba(var(--accent-color-rgb), 0.25);
+      color: var(--accent-color);
+      border-color: rgba(var(--accent-color-rgb), 0.3);
+    }
+    .message pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border: none;
+    }
+    .code-block-wrapper {
+      position: relative;
+      margin: 0.75rem 0;
+    }
+    .code-block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.5rem 0.75rem;
+      border-radius: calc(var(--border-radius) - 4px) calc(var(--border-radius) - 4px) 0 0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: none;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .dark-theme .code-block-header {
+      background: rgba(0, 0, 0, 0.4);
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .code-block-header .code-language {
+      font-weight: 500;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.5px;
+    }
+    .code-copy-button {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    }
+    .code-copy-button:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .code-copy-button:active {
+      transform: translateY(0);
+    }
+    .code-copy-button.copied {
+      background: rgba(76, 175, 80, 0.3);
+      border-color: rgba(76, 175, 80, 0.5);
+      color: #4caf50;
+    }
+    .code-copy-button svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+    .code-block-buttons {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .code-download-button {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    }
+    .code-download-button:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .code-download-button:active {
+      transform: translateY(0);
+    }
+    .code-download-button svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+    .message pre {
+      margin-top: 0;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+    /* Mobile responsive code blocks */
+    @media (max-width: 768px) {
+      .message pre {
+        font-size: 0.85em;
+        padding: 0.75rem;
+      }
+      .code-block-header {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.7rem;
+      }
+      .code-copy-button {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+      }
+      .code-copy-button svg {
+        width: 12px;
+        height: 12px;
+      }
+      .code-download-button {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+      }
+      .code-download-button svg {
+        width: 12px;
+        height: 12px;
+      }
+      .code-block-buttons {
+        gap: 0.4rem;
+      }
+    }
+
     .message-buttons {
       display: flex;
       flex-direction: row;
@@ -3876,6 +4240,232 @@
       document.body.removeChild(textArea);
     }
 
+    /**
+     * Configure marked.js for code blocks with proper highlighting
+     */
+    function configureMarked() {
+      if (typeof marked !== 'undefined') {
+        marked.setOptions({
+          breaks: true,
+          gfm: true,
+          headerIds: false,
+          mangle: false
+        });
+      }
+    }
+
+    /**
+     * Get file extension based on programming language
+     * @param {string} language - Programming language name
+     * @returns {string} - File extension (with dot)
+     */
+    function getFileExtension(language) {
+      const lang = language.toLowerCase();
+      const extensionMap = {
+        'javascript': '.js',
+        'js': '.js',
+        'typescript': '.ts',
+        'ts': '.ts',
+        'python': '.py',
+        'py': '.py',
+        'java': '.java',
+        'cpp': '.cpp',
+        'c++': '.cpp',
+        'c': '.c',
+        'csharp': '.cs',
+        'cs': '.cs',
+        'php': '.php',
+        'ruby': '.rb',
+        'rb': '.rb',
+        'go': '.go',
+        'golang': '.go',
+        'rust': '.rs',
+        'rs': '.rs',
+        'swift': '.swift',
+        'kotlin': '.kt',
+        'kt': '.kt',
+        'scala': '.scala',
+        'html': '.html',
+        'css': '.css',
+        'scss': '.scss',
+        'sass': '.sass',
+        'less': '.less',
+        'json': '.json',
+        'xml': '.xml',
+        'yaml': '.yaml',
+        'yml': '.yml',
+        'markdown': '.md',
+        'md': '.md',
+        'sql': '.sql',
+        'bash': '.sh',
+        'shell': '.sh',
+        'sh': '.sh',
+        'powershell': '.ps1',
+        'ps1': '.ps1',
+        'dockerfile': '.dockerfile',
+        'docker': '.dockerfile',
+        'r': '.r',
+        'matlab': '.m',
+        'lua': '.lua',
+        'perl': '.pl',
+        'pl': '.pl',
+        'dart': '.dart',
+        'vue': '.vue',
+        'jsx': '.jsx',
+        'tsx': '.tsx',
+        'svelte': '.svelte'
+      };
+      
+      return extensionMap[lang] || '.txt';
+    }
+
+    /**
+     * Download code as file with proper extension
+     * @param {string} code - Code content
+     * @param {string} language - Programming language
+     */
+    function downloadCodeFile(code, language) {
+      const extension = getFileExtension(language);
+      const fileName = `code${extension}`;
+      
+      const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    /**
+     * Process code blocks in HTML content and add copy buttons
+     * @param {string|HTMLElement} content - HTML string or element containing code blocks
+     * @returns {HTMLElement|null} - Processed element or null
+     */
+    function processCodeBlocks(content) {
+      let container;
+      if (typeof content === 'string') {
+        container = document.createElement('div');
+        container.innerHTML = content;
+      } else if (content instanceof HTMLElement) {
+        container = content;
+      } else {
+        return null;
+      }
+
+      const codeBlocks = container.querySelectorAll('pre code');
+      codeBlocks.forEach((codeElement) => {
+        const preElement = codeElement.parentElement;
+        if (!preElement || preElement.tagName !== 'PRE') return;
+        
+        // Check if already processed
+        if (preElement.closest('.code-block-wrapper')) return;
+
+        // Get language from class (code class="language-javascript" -> javascript)
+        const languageClass = Array.from(codeElement.classList)
+          .find(cls => cls.startsWith('language-'));
+        const languageRaw = languageClass 
+          ? languageClass.replace('language-', '')
+          : 'code';
+        const language = languageRaw.toUpperCase();
+
+        // Get code text
+        const codeText = codeElement.textContent || codeElement.innerText;
+
+        // Create wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-block-wrapper';
+
+        // Create header with language and buttons
+        const header = document.createElement('div');
+        header.className = 'code-block-header';
+        
+        const languageSpan = document.createElement('span');
+        languageSpan.className = 'code-language';
+        languageSpan.textContent = language;
+        header.appendChild(languageSpan);
+
+        // Create buttons container
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'code-block-buttons';
+
+        const copyButton = document.createElement('button');
+        copyButton.className = 'code-copy-button';
+        copyButton.setAttribute('aria-label', 'Копировать код');
+        copyButton.setAttribute('title', 'Копировать код');
+        copyButton.innerHTML = `
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+          </svg>
+          <span>Копировать</span>
+        `;
+        
+        copyButton.addEventListener('click', async () => {
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(codeText);
+            } else {
+              // Fallback for older browsers
+              const textArea = document.createElement('textarea');
+              textArea.value = codeText;
+              textArea.style.position = 'fixed';
+              textArea.style.opacity = '0';
+              document.body.appendChild(textArea);
+              textArea.select();
+              document.execCommand('copy');
+              document.body.removeChild(textArea);
+            }
+            
+            // Show success feedback
+            const originalText = copyButton.querySelector('span').textContent;
+            copyButton.classList.add('copied');
+            copyButton.querySelector('span').textContent = 'Скопировано!';
+            
+            setTimeout(() => {
+              copyButton.classList.remove('copied');
+              copyButton.querySelector('span').textContent = originalText;
+            }, 2000);
+          } catch (err) {
+            console.error('Ошибка копирования кода:', err);
+            showCustomAlert('Не удалось скопировать код');
+          }
+        });
+
+        const downloadButton = document.createElement('button');
+        downloadButton.className = 'code-download-button';
+        downloadButton.setAttribute('aria-label', 'Скачать код');
+        downloadButton.setAttribute('title', 'Скачать код');
+        downloadButton.innerHTML = `
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/>
+          </svg>
+          <span>Скачать</span>
+        `;
+        
+        downloadButton.addEventListener('click', () => {
+          try {
+            downloadCodeFile(codeText, languageRaw);
+          } catch (err) {
+            console.error('Ошибка скачивания кода:', err);
+            showCustomAlert('Не удалось скачать код');
+          }
+        });
+
+        buttonsContainer.appendChild(copyButton);
+        buttonsContainer.appendChild(downloadButton);
+        header.appendChild(buttonsContainer);
+        wrapper.appendChild(header);
+
+        // Move pre element into wrapper
+        preElement.parentNode.insertBefore(wrapper, preElement);
+        wrapper.appendChild(preElement);
+      });
+
+      return container;
+    }
+
     function setAppHeight() {
       const doc = document.documentElement;
       doc.style.setProperty('--app-height', `${window.innerHeight}px`);
@@ -4052,6 +4642,7 @@ function setupMobileHamburgerMenu() {{
 
     // --- Initialization ---
     window.onload = () => {
+      configureMarked();
       setAccentRgb();
       loadSettings();
       loadNeuralMemory();
@@ -5086,6 +5677,8 @@ function setupMobileHamburgerMenu() {{
       let textPart = msgData.content ? marked.parse(msgData.content) : '';
       htmlContent = `<strong>${senderName}:</strong>${textPart}`;
       messageDiv.innerHTML = htmlContent;
+      // Process code blocks and add copy buttons
+      processCodeBlocks(messageDiv);
 
       if (msgData.attachments && msgData.attachments.length > 0) {
         const attachmentsGrid = document.createElement('div');
@@ -5593,6 +6186,7 @@ function setupMobileHamburgerMenu() {{
                                 reply = removeThoughts(streamedContent);
                                 if (messageDivToUpdate) {
                                     messageDivToUpdate.innerHTML = `<strong>${characterForResponse}:</strong>${marked.parse(reply)}`;
+                                    processCodeBlocks(messageDivToUpdate);
                                     scrollToBottom(true);
                                 }
                             }
@@ -6214,6 +6808,7 @@ function setupMobileHamburgerMenu() {{
                 reply = removeThoughts(streamedContent);
                 if (streamingMessageDiv) {
                   streamingMessageDiv.innerHTML = `<strong>${apiCharacterName}:</strong>${marked.parse(reply)}`;
+                  processCodeBlocks(streamingMessageDiv);
                   scrollToBottom(true);
                 }
               }
@@ -7411,6 +8006,232 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
       document.body.removeChild(textArea);
     }
 
+    /**
+     * Configure marked.js for code blocks with proper highlighting
+     */
+    function configureMarked() {
+      if (typeof marked !== 'undefined') {
+        marked.setOptions({
+          breaks: true,
+          gfm: true,
+          headerIds: false,
+          mangle: false
+        });
+      }
+    }
+
+    /**
+     * Get file extension based on programming language
+     * @param {string} language - Programming language name
+     * @returns {string} - File extension (with dot)
+     */
+    function getFileExtension(language) {
+      const lang = language.toLowerCase();
+      const extensionMap = {
+        'javascript': '.js',
+        'js': '.js',
+        'typescript': '.ts',
+        'ts': '.ts',
+        'python': '.py',
+        'py': '.py',
+        'java': '.java',
+        'cpp': '.cpp',
+        'c++': '.cpp',
+        'c': '.c',
+        'csharp': '.cs',
+        'cs': '.cs',
+        'php': '.php',
+        'ruby': '.rb',
+        'rb': '.rb',
+        'go': '.go',
+        'golang': '.go',
+        'rust': '.rs',
+        'rs': '.rs',
+        'swift': '.swift',
+        'kotlin': '.kt',
+        'kt': '.kt',
+        'scala': '.scala',
+        'html': '.html',
+        'css': '.css',
+        'scss': '.scss',
+        'sass': '.sass',
+        'less': '.less',
+        'json': '.json',
+        'xml': '.xml',
+        'yaml': '.yaml',
+        'yml': '.yml',
+        'markdown': '.md',
+        'md': '.md',
+        'sql': '.sql',
+        'bash': '.sh',
+        'shell': '.sh',
+        'sh': '.sh',
+        'powershell': '.ps1',
+        'ps1': '.ps1',
+        'dockerfile': '.dockerfile',
+        'docker': '.dockerfile',
+        'r': '.r',
+        'matlab': '.m',
+        'lua': '.lua',
+        'perl': '.pl',
+        'pl': '.pl',
+        'dart': '.dart',
+        'vue': '.vue',
+        'jsx': '.jsx',
+        'tsx': '.tsx',
+        'svelte': '.svelte'
+      };
+      
+      return extensionMap[lang] || '.txt';
+    }
+
+    /**
+     * Download code as file with proper extension
+     * @param {string} code - Code content
+     * @param {string} language - Programming language
+     */
+    function downloadCodeFile(code, language) {
+      const extension = getFileExtension(language);
+      const fileName = `code${extension}`;
+      
+      const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    /**
+     * Process code blocks in HTML content and add copy buttons
+     * @param {string|HTMLElement} content - HTML string or element containing code blocks
+     * @returns {HTMLElement|null} - Processed element or null
+     */
+    function processCodeBlocks(content) {
+      let container;
+      if (typeof content === 'string') {
+        container = document.createElement('div');
+        container.innerHTML = content;
+      } else if (content instanceof HTMLElement) {
+        container = content;
+      } else {
+        return null;
+      }
+
+      const codeBlocks = container.querySelectorAll('pre code');
+      codeBlocks.forEach((codeElement) => {
+        const preElement = codeElement.parentElement;
+        if (!preElement || preElement.tagName !== 'PRE') return;
+        
+        // Check if already processed
+        if (preElement.closest('.code-block-wrapper')) return;
+
+        // Get language from class (code class="language-javascript" -> javascript)
+        const languageClass = Array.from(codeElement.classList)
+          .find(cls => cls.startsWith('language-'));
+        const languageRaw = languageClass 
+          ? languageClass.replace('language-', '')
+          : 'code';
+        const language = languageRaw.toUpperCase();
+
+        // Get code text
+        const codeText = codeElement.textContent || codeElement.innerText;
+
+        // Create wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-block-wrapper';
+
+        // Create header with language and buttons
+        const header = document.createElement('div');
+        header.className = 'code-block-header';
+        
+        const languageSpan = document.createElement('span');
+        languageSpan.className = 'code-language';
+        languageSpan.textContent = language;
+        header.appendChild(languageSpan);
+
+        // Create buttons container
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'code-block-buttons';
+
+        const copyButton = document.createElement('button');
+        copyButton.className = 'code-copy-button';
+        copyButton.setAttribute('aria-label', 'Копировать код');
+        copyButton.setAttribute('title', 'Копировать код');
+        copyButton.innerHTML = `
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+          </svg>
+          <span>Копировать</span>
+        `;
+        
+        copyButton.addEventListener('click', async () => {
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(codeText);
+            } else {
+              // Fallback for older browsers
+              const textArea = document.createElement('textarea');
+              textArea.value = codeText;
+              textArea.style.position = 'fixed';
+              textArea.style.opacity = '0';
+              document.body.appendChild(textArea);
+              textArea.select();
+              document.execCommand('copy');
+              document.body.removeChild(textArea);
+            }
+            
+            // Show success feedback
+            const originalText = copyButton.querySelector('span').textContent;
+            copyButton.classList.add('copied');
+            copyButton.querySelector('span').textContent = 'Скопировано!';
+            
+            setTimeout(() => {
+              copyButton.classList.remove('copied');
+              copyButton.querySelector('span').textContent = originalText;
+            }, 2000);
+          } catch (err) {
+            console.error('Ошибка копирования кода:', err);
+            showCustomAlert('Не удалось скопировать код');
+          }
+        });
+
+        const downloadButton = document.createElement('button');
+        downloadButton.className = 'code-download-button';
+        downloadButton.setAttribute('aria-label', 'Скачать код');
+        downloadButton.setAttribute('title', 'Скачать код');
+        downloadButton.innerHTML = `
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/>
+          </svg>
+          <span>Скачать</span>
+        `;
+        
+        downloadButton.addEventListener('click', () => {
+          try {
+            downloadCodeFile(codeText, languageRaw);
+          } catch (err) {
+            console.error('Ошибка скачивания кода:', err);
+            showCustomAlert('Не удалось скачать код');
+          }
+        });
+
+        buttonsContainer.appendChild(copyButton);
+        buttonsContainer.appendChild(downloadButton);
+        header.appendChild(buttonsContainer);
+        wrapper.appendChild(header);
+
+        // Move pre element into wrapper
+        preElement.parentNode.insertBefore(wrapper, preElement);
+        wrapper.appendChild(preElement);
+      });
+
+      return container;
+    }
+
     function setAppHeight() {
       const doc = document.documentElement;
       doc.style.setProperty('--app-height', `${window.innerHeight}px`);
@@ -7548,6 +8369,7 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
 
     // --- Initialization ---
     window.onload = () => {
+      configureMarked();
       setAccentRgb();
       loadSettings();
       loadNeuralMemory();
@@ -8582,6 +9404,8 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
       let textPart = msgData.content ? marked.parse(msgData.content) : '';
       htmlContent = `<strong>${senderName}:</strong>${textPart}`;
       messageDiv.innerHTML = htmlContent;
+      // Process code blocks and add copy buttons
+      processCodeBlocks(messageDiv);
 
       if (msgData.attachments && msgData.attachments.length > 0) {
         const attachmentsGrid = document.createElement('div');
@@ -9089,6 +9913,7 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
                                 reply = removeThoughts(streamedContent);
                                 if (messageDivToUpdate) {
                                     messageDivToUpdate.innerHTML = `<strong>${characterForResponse}:</strong>${marked.parse(reply)}`;
+                                    processCodeBlocks(messageDivToUpdate);
                                     scrollToBottom(true);
                                 }
                             }
@@ -9710,6 +10535,7 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
                 reply = removeThoughts(streamedContent);
                 if (streamingMessageDiv) {
                   streamingMessageDiv.innerHTML = `<strong>${apiCharacterName}:</strong>${marked.parse(reply)}`;
+                  processCodeBlocks(streamingMessageDiv);
                   scrollToBottom(true);
                 }
               }
