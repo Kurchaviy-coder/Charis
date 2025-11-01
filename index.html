@@ -3637,7 +3637,7 @@
 </div>
 </fieldset>
 <section aria-label="Настройки персонажа" class="settings" id="settingsSection"><div class="tab-buttons"><button class="active" onclick="openSettingsTab(1)" type="button">🔌 Настройки API LLM (По умолчанию)</button><button onclick="openSettingsTab(2)" type="button">🇬 Настройки Google Gemini API</button><button onclick="openSettingsTab(3)" type="button">🔗 Настройки REST API</button><button onclick="openSettingsTab(4)" type="button">👤 Основные настройки Персонажа</button><button onclick="openSettingsTab(5)" type="button">📝 Описание и личность</button><button onclick="openSettingsTab(6)" type="button">📖 Сценарий и примеры диалога</button><button onclick="openSettingsTab(7)" type="button">👋 Приветствия</button><button onclick="openSettingsTab(8)" type="button">⚙️ Дополнительные инструкции для ИИ</button><button onclick="openSettingsTab(9)" type="button">🎨 Настройки оформления</button><button onclick="openSettingsTab(10)" type="button">🖼️ Аватары</button><button onclick="openSettingsTab(11)" type="button">🧠 Память ИИ (Общая)</button></div><div class="tab-page active" id="settingsTab1"><fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
-<label for="apiKey">Ключ API (LLM):</label>
+<label for="apiKey">Ключ API (LLM): <a href="https://openrouter.ai/keys" target="_blank">Получить</a></label>
 <input aria-label="Ключ API LLM" autocomplete="off" id="apiKey" placeholder="Введите ваш API ключ" type="password"/>
 <label for="apiUrl">URL API LLM:</label>
 <input aria-label="URL LLM API" id="apiUrl" type="text" value="https://openrouter.ai/api/v1/chat/completions"/>
@@ -3649,7 +3649,7 @@
 <input aria-label="Максимум токенов LLM" id="maxTokens" placeholder="Например, 1024" type="number" value="1024"/>
 </fieldset></div><div class="tab-page" id="settingsTab2"><fieldset class="fieldset-span-1">
 <legend>🇬 Настройки Google Gemini API</legend>
-<label for="googleApiKey">Ключ Google API:</label>
+<label for="googleApiKey">Ключ Google API: <a href="https://aistudio.google.com/app/apikey" target="_blank">Получить</a></label>
 <input aria-label="Ключ Google API" autocomplete="off" id="googleApiKey" placeholder="Введите ваш Google API ключ" type="password"/>
 <label for="googleApiModel">Модель Google Gemini:</label>
 <select aria-label="Модель Google Gemini" id="googleApiModel"></select>
@@ -6838,7 +6838,7 @@ function showCustomConfirm(message, onConfirm) {
 if (typeof window.originalSettingsHTML === 'undefined') {
   window.originalSettingsHTML = `
 <fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
-<label for="apiKey">Ключ API (LLM):</label>
+<label for="apiKey">Ключ API (LLM): <a href="https://openrouter.ai/keys" target="_blank">Получить</a></label>
 <input aria-label="Ключ API LLM" autocomplete="off" id="apiKey" placeholder="Введите ваш API ключ" type="password"/>
 <label for="apiUrl">URL API LLM:</label>
 <input aria-label="URL LLM API" id="apiUrl" type="text" value="https://openrouter.ai/api/v1/chat/completions"/>
@@ -6851,7 +6851,7 @@ if (typeof window.originalSettingsHTML === 'undefined') {
 </fieldset>
 <fieldset class="fieldset-span-1">
 <legend>🇬 Настройки Google Gemini API</legend>
-<label for="googleApiKey">Ключ Google API:</label>
+<label for="googleApiKey">Ключ Google API: <a href="https://aistudio.google.com/app/apikey" target="_blank">Получить</a></label>
 <input aria-label="Ключ Google API" autocomplete="off" id="googleApiKey" placeholder="Введите ваш Google API ключ" type="password"/>
 <label for="googleApiModel">Модель Google Gemini:</label>
 <select aria-label="Модель Google Gemini" id="googleApiModel"></select>
@@ -6973,7 +6973,7 @@ if (typeof window.originalSettingsHTML === 'undefined') {
 
 // Mobile (tabbed) settings content (from modified file)
 const mobileSettingsHTML = `<div class="tab-buttons"><button class="active" onclick="openSettingsTab(1)" type="button">🔌 Настройки API LLM (По умолчанию)</button><button onclick="openSettingsTab(2)" type="button">🇬 Настройки Google Gemini API</button><button onclick="openSettingsTab(3)" type="button">🔗 Настройки REST API</button><button onclick="openSettingsTab(4)" type="button">👤 Основные настройки Персонажа</button><button onclick="openSettingsTab(5)" type="button">📝 Описание и личность</button><button onclick="openSettingsTab(6)" type="button">📖 Сценарий и примеры диалога</button><button onclick="openSettingsTab(7)" type="button">👋 Приветствия</button><button onclick="openSettingsTab(8)" type="button">⚙️ Дополнительные инструкции для ИИ</button><button onclick="openSettingsTab(9)" type="button">🎨 Настройки оформления</button><button onclick="openSettingsTab(10)" type="button">🖼️ Аватары</button><button onclick="openSettingsTab(11)" type="button">🧠 Память ИИ (Общая)</button></div><div class="tab-page active" id="settingsTab1"><fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
-<label for="apiKey">Ключ API (LLM):</label>
+<label for="apiKey">Ключ API (LLM): <a href="https://openrouter.ai/keys" target="_blank">Получить</a></label>
 <input aria-label="Ключ API LLM" autocomplete="off" id="apiKey" placeholder="Введите ваш API ключ" type="password"/>
 <label for="apiUrl">URL API LLM:</label>
 <input aria-label="URL LLM API" id="apiUrl" type="text" value="https://openrouter.ai/api/v1/chat/completions"/>
@@ -6985,7 +6985,7 @@ const mobileSettingsHTML = `<div class="tab-buttons"><button class="active" oncl
 <input aria-label="Максимум токенов LLM" id="maxTokens" placeholder="Например, 1024" type="number" value="1024"/>
 </fieldset></div><div class="tab-page" id="settingsTab2"><fieldset class="fieldset-span-1">
 <legend>🇬 Настройки Google Gemini API</legend>
-<label for="googleApiKey">Ключ Google API:</label>
+<label for="googleApiKey">Ключ Google API: <a href="https://aistudio.google.com/app/apikey" target="_blank">Получить</a></label>
 <input aria-label="Ключ Google API" autocomplete="off" id="googleApiKey" placeholder="Введите ваш Google API ключ" type="password"/>
 <label for="googleApiModel">Модель Google Gemini:</label>
 <select aria-label="Модель Google Gemini" id="googleApiModel"></select>
@@ -10298,7 +10298,7 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
 if (typeof window.originalSettingsHTML === 'undefined') {
   window.originalSettingsHTML = `
 <fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
-<label for="apiKey">Ключ API (LLM):</label>
+<label for="apiKey">Ключ API (LLM): <a href="https://openrouter.ai/keys" target="_blank">Получить</a></label>
 <input aria-label="Ключ API LLM" autocomplete="off" id="apiKey" placeholder="Введите ваш API ключ" type="password"/>
 <label for="apiUrl">URL API LLM:</label>
 <input aria-label="URL LLM API" id="apiUrl" type="text" value="https://llm.chutes.ai/v1/chat/completions"/>
@@ -10311,7 +10311,7 @@ if (typeof window.originalSettingsHTML === 'undefined') {
 </fieldset>
 <fieldset class="fieldset-span-1">
 <legend>🇬 Настройки Google Gemini API</legend>
-<label for="googleApiKey">Ключ Google API:</label>
+<label for="googleApiKey">Ключ Google API: <a href="https://aistudio.google.com/app/apikey" target="_blank">Получить</a></label>
 <input aria-label="Ключ Google API" autocomplete="off" id="googleApiKey" placeholder="Введите ваш Google API ключ" type="password"/>
 <label for="googleApiModel">Модель Google Gemini:</label>
 <select aria-label="Модель Google Gemini" id="googleApiModel"></select>
@@ -10433,7 +10433,7 @@ if (typeof window.originalSettingsHTML === 'undefined') {
 
 // Mobile (tabbed) settings content (from modified file)
 const mobileSettingsHTML = `<div class="tab-buttons"><button class="active" onclick="openSettingsTab(1)" type="button">🔌 Настройки API LLM (По умолчанию)</button><button onclick="openSettingsTab(2)" type="button">🇬 Настройки Google Gemini API</button><button onclick="openSettingsTab(3)" type="button">🔗 Настройки REST API</button><button onclick="openSettingsTab(4)" type="button">👤 Основные настройки Персонажа</button><button onclick="openSettingsTab(5)" type="button">📝 Описание и личность</button><button onclick="openSettingsTab(6)" type="button">📖 Сценарий и примеры диалога</button><button onclick="openSettingsTab(7)" type="button">👋 Приветствия</button><button onclick="openSettingsTab(8)" type="button">⚙️ Дополнительные инструкции для ИИ</button><button onclick="openSettingsTab(9)" type="button">🎨 Настройки оформления</button><button onclick="openSettingsTab(10)" type="button">🖼️ Аватары</button><button onclick="openSettingsTab(11)" type="button">🧠 Память ИИ (Общая)</button></div><div class="tab-page active" id="settingsTab1"><fieldset class="fieldset-span-1"> <legend>🔌 Настройки API LLM (По умолчанию)</legend>
-<label for="apiKey">Ключ API (LLM):</label>
+<label for="apiKey">Ключ API (LLM): <a href="https://openrouter.ai/keys" target="_blank">Получить</a></label>
 <input aria-label="Ключ API LLM" autocomplete="off" id="apiKey" placeholder="Введите ваш API ключ" type="password"/>
 <label for="apiUrl">URL API LLM:</label>
 <input aria-label="URL LLM API" id="apiUrl" type="text" value="https://llm.chutes.ai/v1/chat/completions"/>
@@ -10445,7 +10445,7 @@ const mobileSettingsHTML = `<div class="tab-buttons"><button class="active" oncl
 <input aria-label="Максимум токенов LLM" id="maxTokens" placeholder="Например, 1024" type="number" value="1024"/>
 </fieldset></div><div class="tab-page" id="settingsTab2"><fieldset class="fieldset-span-1">
 <legend>🇬 Настройки Google Gemini API</legend>
-<label for="googleApiKey">Ключ Google API:</label>
+<label for="googleApiKey">Ключ Google API: <a href="https://aistudio.google.com/app/apikey" target="_blank">Получить</a></label>
 <input aria-label="Ключ Google API" autocomplete="off" id="googleApiKey" placeholder="Введите ваш Google API ключ" type="password"/>
 <label for="googleApiModel">Модель Google Gemini:</label>
 <select aria-label="Модель Google Gemini" id="googleApiModel"></select>
