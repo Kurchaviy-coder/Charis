@@ -1430,7 +1430,8 @@
       word-wrap: normal;
       overflow-x: auto;
     }
-    .message code {
+    .message code,
+    .message .inline-code {
       background: rgba(var(--accent-color-rgb), 0.15);
       color: var(--accent-color);
       padding: 0.2em 0.4em;
@@ -1439,7 +1440,8 @@
       font-size: 0.9em;
       border: 1px solid rgba(var(--accent-color-rgb), 0.2);
     }
-    .dark-theme .message code {
+    .dark-theme .message code,
+    .dark-theme .message .inline-code {
       background: rgba(var(--accent-color-rgb), 0.25);
       color: var(--accent-color);
       border-color: rgba(var(--accent-color-rgb), 0.3);
@@ -3679,7 +3681,8 @@
       word-wrap: normal;
       overflow-x: auto;
     }
-    .message code {
+    .message code,
+    .message .inline-code {
       background: rgba(var(--accent-color-rgb), 0.15);
       color: var(--accent-color);
       padding: 0.2em 0.4em;
@@ -3688,7 +3691,8 @@
       font-size: 0.9em;
       border: 1px solid rgba(var(--accent-color-rgb), 0.2);
     }
-    .dark-theme .message code {
+    .dark-theme .message code,
+    .dark-theme .message .inline-code {
       background: rgba(var(--accent-color-rgb), 0.25);
       color: var(--accent-color);
       border-color: rgba(var(--accent-color-rgb), 0.3);
@@ -5416,6 +5420,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; } */
           headerIds: false,
           mangle: false
         });
+        
+        // Don't modify renderer - we'll convert <code> to <span> after rendering
       }
     }
 
@@ -5629,6 +5635,55 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; } */
       });
 
       return container;
+    }
+
+    // Function to enable translation for inline code elements
+    function enableTranslationForInlineCode(container) {
+      if (!container || !(container instanceof HTMLElement)) return;
+      
+      // Find all code elements
+      const allCodeElements = container.querySelectorAll('code');
+      
+      // Find all pre elements (code blocks)
+      const allPreElements = container.querySelectorAll('pre');
+      
+      // Mark all code blocks as non-translatable
+      allPreElements.forEach((preElement) => {
+        preElement.setAttribute('translate', 'no');
+      });
+      
+      // Process code elements - convert inline <code> to <span class="inline-code">
+      allCodeElements.forEach((codeElement) => {
+        // Check if this code element is inside a pre element (code block)
+        const isInPreBlock = codeElement.closest('pre') !== null;
+        
+        if (isInPreBlock) {
+          // Code blocks should not be translated
+          codeElement.setAttribute('translate', 'no');
+        } else {
+          // Convert inline <code> to <span class="inline-code"> for better translation support
+          const span = document.createElement('span');
+          span.className = 'inline-code';
+          span.setAttribute('translate', 'yes');
+          // Copy all child nodes (including text and other elements)
+          while (codeElement.firstChild) {
+            span.appendChild(codeElement.firstChild);
+          }
+          // Copy attributes if any
+          Array.from(codeElement.attributes).forEach(attr => {
+            if (attr.name !== 'class' && attr.name !== 'translate') {
+              span.setAttribute(attr.name, attr.value);
+            }
+          });
+          codeElement.parentNode.replaceChild(span, codeElement);
+        }
+      });
+      
+      // Process existing inline-code spans - ensure they have translate="yes"
+      const allInlineCodeSpans = container.querySelectorAll('span.inline-code');
+      allInlineCodeSpans.forEach((spanElement) => {
+        spanElement.setAttribute('translate', 'yes');
+      });
     }
 
     function setAppHeight() {
@@ -7654,6 +7709,8 @@ function setupMobileHamburgerMenu() {{
       messageDiv.innerHTML = htmlContent;
       // Process code blocks and add copy buttons
       processCodeBlocks(messageDiv);
+      // Enable translation for inline code elements (but not code blocks)
+      enableTranslationForInlineCode(messageDiv);
 
       if (msgData.attachments && msgData.attachments.length > 0) {
         const attachmentsGrid = document.createElement('div');
@@ -8164,6 +8221,7 @@ function setupMobileHamburgerMenu() {{
                                 if (messageDivToUpdate) {
                                     messageDivToUpdate.innerHTML = `<strong>${characterForResponse}:</strong>${marked.parse(reply)}`;
                                     processCodeBlocks(messageDivToUpdate);
+                                    enableTranslationForInlineCode(messageDivToUpdate);
                                     scrollToBottom(true);
                                 }
                             }
@@ -8747,6 +8805,7 @@ function setupMobileHamburgerMenu() {{
                                     const displayName = currentMode === "group" ? apiCharacterName : (apiCharacterName || "Ассистент");
                                     streamingMessageDiv.innerHTML = `<strong>${displayName}:</strong>${marked.parse(fullReply)}`;
                                     processCodeBlocks(streamingMessageDiv);
+                                    enableTranslationForInlineCode(streamingMessageDiv);
                                     scrollToBottom(true);
                                 }
                             }
@@ -8878,6 +8937,7 @@ function setupMobileHamburgerMenu() {{
                 if (streamingMessageDiv) {
                   streamingMessageDiv.innerHTML = `<strong>${apiCharacterName}:</strong>${marked.parse(reply)}`;
                   processCodeBlocks(streamingMessageDiv);
+                  enableTranslationForInlineCode(streamingMessageDiv);
                   scrollToBottom(true);
                 }
               }
