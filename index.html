@@ -4952,11 +4952,36 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; } */
 </div>
 </fieldset></div><div class="tab-page" id="settingsTab3"><fieldset>
 <legend>🔗 Настройки REST API</legend>
+<div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.05); border-radius: 6px; font-size: 0.9em; line-height: 1.5;">
+<strong>💡 Как использовать:</strong> REST API позволяет подключить любой внешний API для генерации ответов. Поддерживаются форматы OpenAI, Anthropic и кастомные API.
+</div>
 <label for="restApiUrl">URL REST API:</label>
-<input aria-label="URL REST API" id="restApiUrl" placeholder="URL конечной точки REST API" type="text"/>
+<input aria-label="URL REST API" id="restApiUrl" placeholder="https://api.example.com/v1/chat/completions" type="text"/>
+<label for="restApiMethod">HTTP Метод:</label>
+<select aria-label="HTTP Метод REST API" id="restApiMethod">
+<option value="POST">POST (рекомендуется)</option>
+<option value="GET">GET</option>
+<option value="PUT">PUT</option>
+</select>
+<label for="restApiFormat">Формат API:</label>
+<select aria-label="Формат REST API" id="restApiFormat">
+<option value="openai">OpenAI-совместимый (messages[])</option>
+<option value="anthropic">Anthropic Claude (messages[])</option>
+<option value="custom">Кастомный (только текущее сообщение)</option>
+</select>
 <label for="restApiHeaders">Заголовки REST API (JSON):</label>
-<textarea aria-label="Заголовки REST API (JSON)" id="restApiHeaders" placeholder='Пример: {"Authorization": "Bearer ВАШ_ТОКЕН"}'></textarea>
-<div style="display: flex; align-items: center; margin-top: 0.5rem; gap: 10px;">
+<textarea aria-label="Заголовки REST API (JSON)" id="restApiHeaders" placeholder='{"Authorization": "Bearer ВАШ_ТОКЕН", "Content-Type": "application/json"}' style="min-height: 80px;"></textarea>
+<div style="margin-top: 0.5rem; font-size: 0.85em; color: #666;">
+<details style="cursor: pointer;">
+<summary style="user-select: none;">📋 Примеры заголовков (нажмите на пример для автозаполнения)</summary>
+<div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0,0,0,0.03); border-radius: 4px; font-family: monospace; font-size: 0.9em;">
+<div class="rest-api-example" data-example='{"Authorization": "Bearer ВАШ_ТОКЕН", "Content-Type": "application/json"}' style="margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(74, 144, 226, 0.1); border-radius: 4px; cursor: pointer; transition: background 0.2s; border: 1px solid rgba(74, 144, 226, 0.3);" onmouseover="this.style.background='rgba(74, 144, 226, 0.2)'" onmouseout="this.style.background='rgba(74, 144, 226, 0.1)'" onclick="fillRestApiHeaders(this)"><strong>OpenAI:</strong><br/>{"Authorization": "Bearer ВАШ_ТОКЕН", "Content-Type": "application/json"}</div>
+<div class="rest-api-example" data-example='{"x-api-key": "ВАШ_ТОКЕН", "anthropic-version": "2023-06-01", "Content-Type": "application/json"}' style="margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(74, 144, 226, 0.1); border-radius: 4px; cursor: pointer; transition: background 0.2s; border: 1px solid rgba(74, 144, 226, 0.3);" onmouseover="this.style.background='rgba(74, 144, 226, 0.2)'" onmouseout="this.style.background='rgba(74, 144, 226, 0.1)'" onclick="fillRestApiHeaders(this)"><strong>Anthropic:</strong><br/>{"x-api-key": "ВАШ_ТОКЕН", "anthropic-version": "2023-06-01", "Content-Type": "application/json"}</div>
+<div class="rest-api-example" data-example='{"Authorization": "Bearer ВАШ_ТОКЕН", "X-Custom-Header": "значение"}' style="padding: 0.5rem; background: rgba(74, 144, 226, 0.1); border-radius: 4px; cursor: pointer; transition: background 0.2s; border: 1px solid rgba(74, 144, 226, 0.3);" onmouseover="this.style.background='rgba(74, 144, 226, 0.2)'" onmouseout="this.style.background='rgba(74, 144, 226, 0.1)'" onclick="fillRestApiHeaders(this)"><strong>Кастомный:</strong><br/>{"Authorization": "Bearer ВАШ_ТОКЕН", "X-Custom-Header": "значение"}</div>
+</div>
+</details>
+</div>
+<div style="display: flex; align-items: center; margin-top: 1rem; gap: 10px;">
 <label for="enableRestApi" style="font-weight: 500; margin-bottom: 0;">Использовать REST API:</label>
 <label class="switch">
 <input aria-label="Включить REST API" id="enableRestApi" type="checkbox"/>
@@ -5334,9 +5359,11 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; } */
     const TEXT_COLOR_STORAGE = "mainTextColor_v3";
     const CHAT_FONT_SIZE_STORAGE = "chatFontSize_v1";
     const SIDEBAR_STATE_STORAGE = "sidebarState_v1";
-    const REST_API_URL_STORAGE = "restApiUrl_v2";
-    const REST_API_HEADERS_STORAGE = "restApiHeaders_v2";
-    const ENABLE_REST_API_STORAGE = "enableRestApi_v2";
+    const REST_API_URL_STORAGE = "restApiUrl_v3";
+    const REST_API_HEADERS_STORAGE = "restApiHeaders_v3";
+    const REST_API_METHOD_STORAGE = "restApiMethod_v1";
+    const REST_API_FORMAT_STORAGE = "restApiFormat_v1";
+    const ENABLE_REST_API_STORAGE = "enableRestApi_v3";
     const GOOGLE_API_KEY_STORAGE = "googleApiKey_v1";
     const GOOGLE_API_MODEL_STORAGE = "googleApiModel_v1";
     const ENABLE_GOOGLE_API_STORAGE = "enableGoogleApi_v1";
@@ -5347,6 +5374,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; } */
     let useRestApi = false;
     let restApiUrlValue = "";
     let restApiHeadersValue = {};
+    let restApiMethod = "POST";
+    let restApiFormat = "openai";
     let useGoogleApi = false;
     let googleApiKey = "";
     let googleApiModel = "";
@@ -6516,6 +6545,14 @@ function setupMobileHamburgerMenu() {{
       document.getElementById("restApiHeaders").value = headersString;
       try { restApiHeadersValue = headersString ? JSON.parse(headersString) : {}; }
       catch (e) { console.error("Ошибка парсинга сохраненных заголовков REST API:", e); restApiHeadersValue = {}; }
+      restApiMethod = localStorage.getItem(REST_API_METHOD_STORAGE) || "POST";
+      if (document.getElementById("restApiMethod")) {
+        document.getElementById("restApiMethod").value = restApiMethod;
+      }
+      restApiFormat = localStorage.getItem(REST_API_FORMAT_STORAGE) || "openai";
+      if (document.getElementById("restApiFormat")) {
+        document.getElementById("restApiFormat").value = restApiFormat;
+      }
       useRestApi = localStorage.getItem(ENABLE_REST_API_STORAGE) === "true";
       document.getElementById("enableRestApi").checked = useRestApi;
 
@@ -6684,6 +6721,14 @@ function setupMobileHamburgerMenu() {{
       saveToStorage(REST_API_HEADERS_STORAGE, headersString);
       try { restApiHeadersValue = headersString ? JSON.parse(headersString) : {}; }
       catch (e) { showCustomAlert("Ошибка в JSON формате заголовков REST API. Заголовки не сохранены."); console.error("Неверный JSON в заголовках REST API:", e); restApiHeadersValue = {};}
+      if (document.getElementById("restApiMethod")) {
+        restApiMethod = document.getElementById("restApiMethod").value;
+        saveToStorage(REST_API_METHOD_STORAGE, restApiMethod);
+      }
+      if (document.getElementById("restApiFormat")) {
+        restApiFormat = document.getElementById("restApiFormat").value;
+        saveToStorage(REST_API_FORMAT_STORAGE, restApiFormat);
+      }
       useRestApi = document.getElementById("enableRestApi").checked;
       saveToStorage(ENABLE_REST_API_STORAGE, useRestApi.toString());
 
@@ -8513,47 +8558,184 @@ function setupMobileHamburgerMenu() {{
     }
 
 
-    async function sendToRestApi(userMessageContent, attachmentsArray = null) {
+    async function sendToRestApi(userMessageContent, attachmentsArray = null, charDataForApi = null, systemPromptText = "", temperature = 0.7, max_tokens = 1024, charToRespondName = null) {
         if (!restApiUrlValue) {
             appendNewMessageToDOM({sender:"Система", content:"URL REST API не настроен.", role:"system", avatar:"https://placehold.co/80x80/CCCCCC/FFFFFF?text=S"}, allMessages.length);
             return;
         }
         setStatusActive(true);
-        const apiPlaceholderAvatar = "https://placehold.co/80x80/80D0C0/FFFFFF?text=A";
-        const placeholderMsgData = {sender:"API", content:"Отправка запроса на REST API...", role:"api", avatar: apiPlaceholderAvatar, attachments: attachmentsArray};
+        const apiPlaceholderAvatar = charDataForApi?.avatarCharacter || "https://placehold.co/80x80/80D0C0/FFFFFF?text=A";
+        const placeholderMsgData = {sender: charToRespondName || "API", content:"Отправка запроса на REST API...", role:"assistant", avatar: apiPlaceholderAvatar, attachments: attachmentsArray};
+        if (currentMode === "group" && charToRespondName) {
+            placeholderMsgData.sender = charToRespondName;
+        }
         allMessages.push(placeholderMsgData);
         appendNewMessageToDOM(placeholderMsgData, allMessages.length -1);
 
-
         try {
-            const requestBody = { message: userMessageContent, attachments: attachmentsArray };
-            const response = await fetch(restApiUrlValue, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", ...restApiHeadersValue },
-                body: JSON.stringify(requestBody)
-            });
+            let requestBody = {};
+            let requestUrl = restApiUrlValue;
 
-            const placeholderIndex = allMessages.findIndex(m => m.content === "Отправка запроса на REST API..." && m.sender === "API");
+            // Build request body based on format
+            if (restApiFormat === "openai") {
+                // OpenAI-compatible format
+                let messagesForAPI = [];
+                if (systemPromptText) {
+                    messagesForAPI.push({ role: "system", content: systemPromptText });
+                }
+                
+                // Convert allMessages to OpenAI format
+                allMessages.forEach(m => {
+                    if (m.role === "system" && m.sender === "Система") return; // Skip system messages
+                    if (m.content === "Отправка запроса на REST API...") return; // Skip placeholder
+                    
+                    let apiMsgContentArray = [];
+                    if (m.content) apiMsgContentArray.push({ type: "text", text: m.content });
+                    if (m.attachments && m.attachments.some(att => att.type.startsWith('image/') && att.src.startsWith('data:image'))) {
+                        m.attachments.filter(att => att.type.startsWith('image/') && att.src.startsWith('data:image')).forEach(att => {
+                            apiMsgContentArray.push({ type: "image_url", image_url: { url: att.src } });
+                        });
+                    } else if (m.attachments) {
+                        apiMsgContentArray.push({ type: "text", text: `[Прикреплено ${m.attachments.length} файлов]` });
+                    }
+
+                    const finalContent = apiMsgContentArray.length === 1 && apiMsgContentArray[0].type === "text" ? apiMsgContentArray[0].text : apiMsgContentArray;
+                    const role = (m.sender === "Вы" || m.role === "user") ? "user" : "assistant";
+                    const content = (m.sender !== "Вы" && m.role !== "user" && m.sender && currentMode === 'group') ? `${m.sender}: ${finalContent}` : finalContent;
+                    
+                    messagesForAPI.push({ role, content });
+                });
+
+                requestBody = {
+                    model: charDataForApi?.model || document.getElementById("model")?.value || "gpt-3.5-turbo",
+                    messages: messagesForAPI,
+                    temperature: temperature,
+                    max_tokens: max_tokens
+                };
+            } else if (restApiFormat === "anthropic") {
+                // Anthropic Claude format
+                let messagesForAPI = [];
+                
+                // Convert allMessages to Anthropic format
+                allMessages.forEach(m => {
+                    if (m.role === "system" && m.sender === "Система") return;
+                    if (m.content === "Отправка запроса на REST API...") return;
+                    
+                    const role = (m.sender === "Вы" || m.role === "user") ? "user" : "assistant";
+                    let content = m.content;
+                    if (m.sender !== "Вы" && m.role !== "user" && m.sender && currentMode === 'group') {
+                        content = `${m.sender}: ${content}`;
+                    }
+                    
+                    messagesForAPI.push({ role, content });
+                });
+
+                requestBody = {
+                    model: charDataForApi?.model || "claude-3-5-sonnet-20241022",
+                    max_tokens: max_tokens,
+                    messages: messagesForAPI
+                };
+                
+                if (systemPromptText) {
+                    requestBody.system = systemPromptText;
+                }
+            } else {
+                // Custom format - only current message (backward compatible)
+                requestBody = { 
+                    message: userMessageContent, 
+                    attachments: attachmentsArray,
+                    temperature: temperature,
+                    max_tokens: max_tokens
+                };
+                if (systemPromptText) {
+                    requestBody.system_prompt = systemPromptText;
+                }
+            }
+
+            // Build headers
+            const headers = { "Content-Type": "application/json", ...restApiHeadersValue };
+
+            // Handle GET method (append params to URL)
+            if (restApiMethod === "GET") {
+                const params = new URLSearchParams();
+                Object.keys(requestBody).forEach(key => {
+                    if (typeof requestBody[key] === 'object') {
+                        params.append(key, JSON.stringify(requestBody[key]));
+                    } else {
+                        params.append(key, requestBody[key]);
+                    }
+                });
+                requestUrl = `${restApiUrlValue}?${params.toString()}`;
+                requestBody = null;
+            }
+
+            const fetchOptions = {
+                method: restApiMethod,
+                headers: headers
+            };
+            if (requestBody && restApiMethod !== "GET") {
+                fetchOptions.body = JSON.stringify(requestBody);
+            }
+
+            const response = await fetch(requestUrl, fetchOptions);
+
+            const placeholderIndex = allMessages.findIndex(m => m.content === "Отправка запроса на REST API..." && (m.sender === "API" || m.sender === charToRespondName));
             if (placeholderIndex > -1) {
                 allMessages.splice(placeholderIndex, 1);
                 removeMessageFromDOM(placeholderIndex);
             }
 
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorData;
+                try { errorData = JSON.parse(errorText); } catch(e) { errorData = { error: errorText }; }
+                throw new Error(`API Ошибка ${response.status}: ${errorData.error?.message || errorData.error || errorText || response.statusText}`);
+            }
 
             const responseData = await response.json();
-            if (!response.ok) throw new Error(`API Ошибка: ${response.status} - ${responseData.error || JSON.stringify(responseData)}`);
+            
+            // Parse response based on format
+            let apiReplyText = "";
+            if (restApiFormat === "openai") {
+                apiReplyText = responseData.choices?.[0]?.message?.content || responseData.choices?.[0]?.text || responseData.content || "";
+            } else if (restApiFormat === "anthropic") {
+                apiReplyText = responseData.content?.[0]?.text || responseData.content || "";
+            } else {
+                // Custom format - try multiple common fields
+                apiReplyText = responseData.reply || responseData.message || responseData.text || responseData.content || 
+                              (responseData.data && (responseData.data.reply || responseData.data.message || responseData.data.text)) ||
+                              JSON.stringify(responseData);
+            }
 
-            let apiReplyText = responseData.reply || responseData.message || JSON.stringify(responseData.data) || JSON.stringify(responseData);
-            const apiReplyMsgData = {sender:"API", content:apiReplyText, role:"api", avatar: apiPlaceholderAvatar, attachments: responseData.attachments};
+            if (!apiReplyText || apiReplyText.trim() === "") {
+                throw new Error("Пустой ответ от API. Проверьте формат ответа API.");
+            }
+
+            const apiReplyMsgData = {
+                sender: charToRespondName || "API", 
+                content: apiReplyText, 
+                role: "assistant", 
+                avatar: apiPlaceholderAvatar, 
+                attachments: responseData.attachments
+            };
+            if (currentMode === "group" && charToRespondName) {
+                apiReplyMsgData.sender = charToRespondName;
+            }
             allMessages.push(apiReplyMsgData);
             appendNewMessageToDOM(apiReplyMsgData, allMessages.length - 1);
 
+            // Save chat
+            if (currentMode === "personal" && charToRespondName) {
+                saveChat(charToRespondName, allMessages);
+            } else if (currentMode === "group") {
+                saveRoomChat(allMessages);
+            }
 
         } catch (error) {
             console.error("REST API Ошибка:", error);
-            const placeholderIndexOnError = allMessages.findIndex(m => m.content === "Отправка запроса на REST API..." && m.sender === "API");
+            const placeholderIndexOnError = allMessages.findIndex(m => m.content === "Отправка запроса на REST API..." && (m.sender === "API" || m.sender === charToRespondName));
             if (placeholderIndexOnError > -1) {
-                 allMessages.splice(placeholderIndexOnError, 1);
+                allMessages.splice(placeholderIndexOnError, 1);
                 removeMessageFromDOM(placeholderIndexOnError);
             }
             const errorMsgData = {sender:"Система", content:`Ошибка REST API: ${error.message}`, role:"system", avatar:"https://placehold.co/80x80/CCCCCC/FFFFFF?text=S"};
@@ -8562,17 +8744,98 @@ function setupMobileHamburgerMenu() {{
 
         } finally {
             setStatusActive(false);
+            isBotGenerating = false;
+            updateRegenerateButtonsState(false);
             scrollToBottom(true);
             userInput.focus();
         }
     }
     function setupRestApiSwitch() {
         const enableRestApiCheckbox = document.getElementById("enableRestApi");
-        enableRestApiCheckbox.addEventListener("change", () => {
-            useRestApi = enableRestApiCheckbox.checked;
-            saveToStorage(ENABLE_REST_API_STORAGE, useRestApi.toString());
-        });
+        if (enableRestApiCheckbox) {
+            enableRestApiCheckbox.addEventListener("change", () => {
+                useRestApi = enableRestApiCheckbox.checked;
+                saveToStorage(ENABLE_REST_API_STORAGE, useRestApi.toString());
+            });
+        }
+        
+        const restApiUrlInput = document.getElementById("restApiUrl");
+        if (restApiUrlInput) {
+            restApiUrlInput.addEventListener("input", () => {
+                restApiUrlValue = restApiUrlInput.value.trim();
+                saveToStorage(REST_API_URL_STORAGE, restApiUrlValue);
+            });
+        }
+        
+        const restApiHeadersTextarea = document.getElementById("restApiHeaders");
+        if (restApiHeadersTextarea) {
+            restApiHeadersTextarea.addEventListener("input", () => {
+                const headersString = restApiHeadersTextarea.value.trim();
+                saveToStorage(REST_API_HEADERS_STORAGE, headersString);
+                try { 
+                    restApiHeadersValue = headersString ? JSON.parse(headersString) : {}; 
+                } catch (e) { 
+                    console.error("Ошибка парсинга заголовков REST API:", e); 
+                    restApiHeadersValue = {}; 
+                }
+            });
+        }
+        
+        const restApiMethodSelect = document.getElementById("restApiMethod");
+        if (restApiMethodSelect) {
+            restApiMethodSelect.addEventListener("change", () => {
+                restApiMethod = restApiMethodSelect.value;
+                saveToStorage(REST_API_METHOD_STORAGE, restApiMethod);
+            });
+        }
+        
+        const restApiFormatSelect = document.getElementById("restApiFormat");
+        if (restApiFormatSelect) {
+            restApiFormatSelect.addEventListener("change", () => {
+                restApiFormat = restApiFormatSelect.value;
+                saveToStorage(REST_API_FORMAT_STORAGE, restApiFormat);
+            });
+        }
     }
+
+    // Функция автозаполнения заголовков REST API из примеров
+    function fillRestApiHeaders(exampleElement) {
+        const headersTextarea = document.getElementById("restApiHeaders");
+        if (!headersTextarea) return;
+        
+        const exampleJson = exampleElement.getAttribute("data-example");
+        if (!exampleJson) return;
+        
+        try {
+            // Парсим JSON для форматирования
+            const parsed = JSON.parse(exampleJson);
+            // Форматируем с отступами для читаемости
+            const formatted = JSON.stringify(parsed, null, 2);
+            headersTextarea.value = formatted;
+            
+            // Сохраняем в переменную и localStorage
+            restApiHeadersValue = parsed;
+            saveToStorage(REST_API_HEADERS_STORAGE, formatted);
+            
+            // Визуальная обратная связь - кратковременное выделение
+            headersTextarea.style.border = "2px solid #4a90e2";
+            headersTextarea.focus();
+            setTimeout(() => {
+                headersTextarea.style.border = "";
+            }, 500);
+            
+            // Прокрутка к textarea для удобства
+            headersTextarea.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } catch (e) {
+            console.error("Ошибка при заполнении примера:", e);
+            // В случае ошибки просто вставляем как есть
+            headersTextarea.value = exampleJson;
+            headersTextarea.focus();
+        }
+    }
+    
+    // Делаем функцию доступной глобально для onclick
+    window.fillRestApiHeaders = fillRestApiHeaders;
 
     async function respondToLastMessage(characterName) {
       if (isBotGenerating) return;
@@ -8807,7 +9070,9 @@ function setupMobileHamburgerMenu() {{
 
         } else if (useRestApi && restApiUrlValue) {
             shouldScrollToBottom = true;
-            await sendToRestApi(messageContent, attachmentsDataArray);
+            isBotGenerating = true;
+            updateRegenerateButtonsState(true);
+            await sendToRestApi(messageContent, attachmentsDataArray, charDataForApi, systemPromptText, temperature, max_tokens, charToRespondName);
         } else {
             isBotGenerating = true;
             updateRegenerateButtonsState(true);
@@ -9804,11 +10069,36 @@ if (typeof window.originalSettingsHTML === 'undefined') {
 </fieldset>
 <fieldset>
 <legend>🔗 Настройки REST API</legend>
+<div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.05); border-radius: 6px; font-size: 0.9em; line-height: 1.5;">
+<strong>💡 Как использовать:</strong> REST API позволяет подключить любой внешний API для генерации ответов. Поддерживаются форматы OpenAI, Anthropic и кастомные API.
+</div>
 <label for="restApiUrl">URL REST API:</label>
-<input aria-label="URL REST API" id="restApiUrl" placeholder="URL конечной точки REST API" type="text"/>
+<input aria-label="URL REST API" id="restApiUrl" placeholder="https://api.example.com/v1/chat/completions" type="text"/>
+<label for="restApiMethod">HTTP Метод:</label>
+<select aria-label="HTTP Метод REST API" id="restApiMethod">
+<option value="POST">POST (рекомендуется)</option>
+<option value="GET">GET</option>
+<option value="PUT">PUT</option>
+</select>
+<label for="restApiFormat">Формат API:</label>
+<select aria-label="Формат REST API" id="restApiFormat">
+<option value="openai">OpenAI-совместимый (messages[])</option>
+<option value="anthropic">Anthropic Claude (messages[])</option>
+<option value="custom">Кастомный (только текущее сообщение)</option>
+</select>
 <label for="restApiHeaders">Заголовки REST API (JSON):</label>
-<textarea aria-label="Заголовки REST API (JSON)" id="restApiHeaders" placeholder='Пример: {"Authorization": "Bearer ВАШ_ТОКЕН"}'></textarea>
-<div style="display: flex; align-items: center; margin-top: 0.5rem; gap: 10px;">
+<textarea aria-label="Заголовки REST API (JSON)" id="restApiHeaders" placeholder='{"Authorization": "Bearer ВАШ_ТОКЕН", "Content-Type": "application/json"}' style="min-height: 80px;"></textarea>
+<div style="margin-top: 0.5rem; font-size: 0.85em; color: #666;">
+<details style="cursor: pointer;">
+<summary style="user-select: none;">📋 Примеры заголовков (нажмите на пример для автозаполнения)</summary>
+<div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0,0,0,0.03); border-radius: 4px; font-family: monospace; font-size: 0.9em;">
+<div class="rest-api-example" data-example='{"Authorization": "Bearer ВАШ_ТОКЕН", "Content-Type": "application/json"}' style="margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(74, 144, 226, 0.1); border-radius: 4px; cursor: pointer; transition: background 0.2s; border: 1px solid rgba(74, 144, 226, 0.3);" onmouseover="this.style.background='rgba(74, 144, 226, 0.2)'" onmouseout="this.style.background='rgba(74, 144, 226, 0.1)'" onclick="fillRestApiHeaders(this)"><strong>OpenAI:</strong><br/>{"Authorization": "Bearer ВАШ_ТОКЕН", "Content-Type": "application/json"}</div>
+<div class="rest-api-example" data-example='{"x-api-key": "ВАШ_ТОКЕН", "anthropic-version": "2023-06-01", "Content-Type": "application/json"}' style="margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(74, 144, 226, 0.1); border-radius: 4px; cursor: pointer; transition: background 0.2s; border: 1px solid rgba(74, 144, 226, 0.3);" onmouseover="this.style.background='rgba(74, 144, 226, 0.2)'" onmouseout="this.style.background='rgba(74, 144, 226, 0.1)'" onclick="fillRestApiHeaders(this)"><strong>Anthropic:</strong><br/>{"x-api-key": "ВАШ_ТОКЕН", "anthropic-version": "2023-06-01", "Content-Type": "application/json"}</div>
+<div class="rest-api-example" data-example='{"Authorization": "Bearer ВАШ_ТОКЕН", "X-Custom-Header": "значение"}' style="padding: 0.5rem; background: rgba(74, 144, 226, 0.1); border-radius: 4px; cursor: pointer; transition: background 0.2s; border: 1px solid rgba(74, 144, 226, 0.3);" onmouseover="this.style.background='rgba(74, 144, 226, 0.2)'" onmouseout="this.style.background='rgba(74, 144, 226, 0.1)'" onclick="fillRestApiHeaders(this)"><strong>Кастомный:</strong><br/>{"Authorization": "Bearer ВАШ_ТОКЕН", "X-Custom-Header": "значение"}</div>
+</div>
+</details>
+</div>
+<div style="display: flex; align-items: center; margin-top: 1rem; gap: 10px;">
 <label for="enableRestApi" style="font-weight: 500; margin-bottom: 0;">Использовать REST API:</label>
 <label class="switch">
 <input aria-label="Включить REST API" id="enableRestApi" type="checkbox">
@@ -9944,11 +10234,36 @@ const mobileSettingsHTML = `<div class="tab-buttons"><button class="active" oncl
 </div>
 </fieldset></div><div class="tab-page" id="settingsTab3"><fieldset>
 <legend>🔗 Настройки REST API</legend>
+<div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.05); border-radius: 6px; font-size: 0.9em; line-height: 1.5;">
+<strong>💡 Как использовать:</strong> REST API позволяет подключить любой внешний API для генерации ответов. Поддерживаются форматы OpenAI, Anthropic и кастомные API.
+</div>
 <label for="restApiUrl">URL REST API:</label>
-<input aria-label="URL REST API" id="restApiUrl" placeholder="URL конечной точки REST API" type="text"/>
+<input aria-label="URL REST API" id="restApiUrl" placeholder="https://api.example.com/v1/chat/completions" type="text"/>
+<label for="restApiMethod">HTTP Метод:</label>
+<select aria-label="HTTP Метод REST API" id="restApiMethod">
+<option value="POST">POST (рекомендуется)</option>
+<option value="GET">GET</option>
+<option value="PUT">PUT</option>
+</select>
+<label for="restApiFormat">Формат API:</label>
+<select aria-label="Формат REST API" id="restApiFormat">
+<option value="openai">OpenAI-совместимый (messages[])</option>
+<option value="anthropic">Anthropic Claude (messages[])</option>
+<option value="custom">Кастомный (только текущее сообщение)</option>
+</select>
 <label for="restApiHeaders">Заголовки REST API (JSON):</label>
-<textarea aria-label="Заголовки REST API (JSON)" id="restApiHeaders" placeholder='Пример: {"Authorization": "Bearer ВАШ_ТОКЕН"}'></textarea>
-<div style="display: flex; align-items: center; margin-top: 0.5rem; gap: 10px;">
+<textarea aria-label="Заголовки REST API (JSON)" id="restApiHeaders" placeholder='{"Authorization": "Bearer ВАШ_ТОКЕН", "Content-Type": "application/json"}' style="min-height: 80px;"></textarea>
+<div style="margin-top: 0.5rem; font-size: 0.85em; color: #666;">
+<details style="cursor: pointer;">
+<summary style="user-select: none;">📋 Примеры заголовков (нажмите на пример для автозаполнения)</summary>
+<div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0,0,0,0.03); border-radius: 4px; font-family: monospace; font-size: 0.9em;">
+<div class="rest-api-example" data-example='{"Authorization": "Bearer ВАШ_ТОКЕН", "Content-Type": "application/json"}' style="margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(74, 144, 226, 0.1); border-radius: 4px; cursor: pointer; transition: background 0.2s; border: 1px solid rgba(74, 144, 226, 0.3);" onmouseover="this.style.background='rgba(74, 144, 226, 0.2)'" onmouseout="this.style.background='rgba(74, 144, 226, 0.1)'" onclick="fillRestApiHeaders(this)"><strong>OpenAI:</strong><br/>{"Authorization": "Bearer ВАШ_ТОКЕН", "Content-Type": "application/json"}</div>
+<div class="rest-api-example" data-example='{"x-api-key": "ВАШ_ТОКЕН", "anthropic-version": "2023-06-01", "Content-Type": "application/json"}' style="margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(74, 144, 226, 0.1); border-radius: 4px; cursor: pointer; transition: background 0.2s; border: 1px solid rgba(74, 144, 226, 0.3);" onmouseover="this.style.background='rgba(74, 144, 226, 0.2)'" onmouseout="this.style.background='rgba(74, 144, 226, 0.1)'" onclick="fillRestApiHeaders(this)"><strong>Anthropic:</strong><br/>{"x-api-key": "ВАШ_ТОКЕН", "anthropic-version": "2023-06-01", "Content-Type": "application/json"}</div>
+<div class="rest-api-example" data-example='{"Authorization": "Bearer ВАШ_ТОКЕН", "X-Custom-Header": "значение"}' style="padding: 0.5rem; background: rgba(74, 144, 226, 0.1); border-radius: 4px; cursor: pointer; transition: background 0.2s; border: 1px solid rgba(74, 144, 226, 0.3);" onmouseover="this.style.background='rgba(74, 144, 226, 0.2)'" onmouseout="this.style.background='rgba(74, 144, 226, 0.1)'" onclick="fillRestApiHeaders(this)"><strong>Кастомный:</strong><br/>{"Authorization": "Bearer ВАШ_ТОКЕН", "X-Custom-Header": "значение"}</div>
+</div>
+</details>
+</div>
+<div style="display: flex; align-items: center; margin-top: 1rem; gap: 10px;">
 <label for="enableRestApi" style="font-weight: 500; margin-bottom: 0;">Использовать REST API:</label>
 <label class="switch">
 <input aria-label="Включить REST API" id="enableRestApi" type="checkbox"/>
