@@ -608,11 +608,31 @@
       font-size: 1rem;
       border: 1px solid transparent;
     }
-    .chat-item:hover {
+    .chat-item:not(.active):hover:not(.dropdown-hovered):not(:has(.chat-dropdown:hover)) {
       background: var(--sidebar-hover-bg);
       box-shadow: 0 4px 12px rgba(var(--accent-color-rgb),0.1);
       transform: translateX(4px);
       border-color: rgba(var(--accent-color-rgb),0.3);
+    }
+    .chat-item.active:hover:not(.dropdown-hovered):not(:has(.chat-dropdown:hover)) {
+      background: var(--sidebar-active-bg);
+      box-shadow: 0 6px 18px rgba(var(--accent-color-rgb),0.25);
+      transform: translateX(0);
+      border-color: transparent;
+    }
+    .chat-item:not(.active).dropdown-hovered,
+    .chat-item:not(.active):has(.chat-dropdown:hover) {
+      background: transparent !important;
+      box-shadow: none !important;
+      transform: translateX(0) !important;
+      border-color: transparent !important;
+    }
+    .chat-item.active.dropdown-hovered,
+    .chat-item.active:has(.chat-dropdown:hover) {
+      background: var(--sidebar-active-bg) !important;
+      box-shadow: 0 6px 18px rgba(var(--accent-color-rgb),0.25) !important;
+      transform: translateX(0) !important;
+      border-color: transparent !important;
     }
     .chat-item.active {
       background: var(--sidebar-active-bg);
@@ -720,6 +740,9 @@
     .chat-dropdown.open {
       display: block;
     }
+    .chat-item:has(.chat-dropdown.open) {
+      z-index: 101;
+    }
     .chat-dropdown-item {
       padding: 0.6rem 1rem;
       cursor: pointer;
@@ -729,6 +752,7 @@
       gap: 0.5rem;
       transition: background var(--transition-fast);
       border-bottom: 1px solid rgba(var(--accent-color-rgb), 0.1);
+      color: var(--text-color);
     }
     .chat-dropdown-item:last-child {
       border-bottom: none;
@@ -746,6 +770,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       font-size: 0.9rem;
+      color: var(--text-color);
     }
     .chat-dropdown-item-actions {
       display: flex;
@@ -944,7 +969,7 @@
       border-color: var(--accent-color);
     }
 
-    #settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal {
+    #settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal, #chatNameModal {
       display: none;
       position: fixed;
       top: 0;
@@ -963,18 +988,30 @@
     #settingsModal.above-hamburger,
     #lorebookModal.above-hamburger,
     #backgroundModal.above-hamburger,
-    #greetingSelectModal.above-hamburger {
+    #greetingSelectModal.above-hamburger,
+    #chatNameModal.above-hamburger {
         z-index: 1010;
     }
 
     #settingsModal[style*="display: flex"],
     #lorebookModal[style*="display: flex"],
     #backgroundModal[style*="display: flex"],
-    #greetingSelectModal[style*="display: flex"] {
+    #greetingSelectModal[style*="display: flex"],
+    #chatNameModal[style*="display: flex"] {
       opacity: 1;
     }
-    .settings-content, 
-@keyframes slideUpFadeInModal {
+    .settings-content {
+      position: relative;
+      background: #fff;
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      animation: slideUpFadeInModal 0.3s var(--transition-normal) forwards;
+    }
+    @keyframes slideUpFadeInModal {
       from { opacity: 0.5; transform: translateY(20px) scale(0.98); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
@@ -1930,6 +1967,34 @@
 
     #backgroundModal .settings-content { max-width: 450px; text-align: center; }
     #backgroundModal input[type="file"] { display: block; margin: 1rem auto; }
+    
+    #chatNameModal .settings-content { 
+      max-width: 500px; 
+      width: 90vw;
+      padding: 1.5rem;
+    }
+    @media (max-width: 480px) {
+      #chatNameModal .settings-content {
+        padding: 1rem;
+        max-width: 95vw;
+      }
+      #chatNameModal .settings-content h2 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+      #chatNameModal .settings-content p {
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+      }
+      #chatNameModal .settings-content input {
+        font-size: 1rem;
+        padding: 0.7rem;
+      }
+      #chatNameModal .settings-content button {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
 
     @keyframes slideDownFadeIn {
       from { opacity: 0; transform: translateY(-15px); }
@@ -2692,11 +2757,31 @@
       font-size: 1rem;
       border: 1px solid transparent;
     }
-    .chat-item:hover {
+    .chat-item:not(.active):hover:not(.dropdown-hovered):not(:has(.chat-dropdown:hover)) {
       background: var(--sidebar-hover-bg);
       box-shadow: 0 4px 12px rgba(var(--accent-color-rgb),0.1);
       transform: translateX(4px);
       border-color: rgba(var(--accent-color-rgb),0.3);
+    }
+    .chat-item.active:hover:not(.dropdown-hovered):not(:has(.chat-dropdown:hover)) {
+      background: var(--sidebar-active-bg);
+      box-shadow: 0 6px 18px rgba(var(--accent-color-rgb),0.25);
+      transform: translateX(0);
+      border-color: transparent;
+    }
+    .chat-item:not(.active).dropdown-hovered,
+    .chat-item:not(.active):has(.chat-dropdown:hover) {
+      background: transparent !important;
+      box-shadow: none !important;
+      transform: translateX(0) !important;
+      border-color: transparent !important;
+    }
+    .chat-item.active.dropdown-hovered,
+    .chat-item.active:has(.chat-dropdown:hover) {
+      background: var(--sidebar-active-bg) !important;
+      box-shadow: 0 6px 18px rgba(var(--accent-color-rgb),0.25) !important;
+      transform: translateX(0) !important;
+      border-color: transparent !important;
     }
     .chat-item.active {
       background: var(--sidebar-active-bg);
@@ -2804,6 +2889,9 @@
     .chat-dropdown.open {
       display: block;
     }
+    .chat-item:has(.chat-dropdown.open) {
+      z-index: 101;
+    }
     .chat-dropdown-item {
       padding: 0.6rem 1rem;
       cursor: pointer;
@@ -2813,6 +2901,7 @@
       gap: 0.5rem;
       transition: background var(--transition-fast);
       border-bottom: 1px solid rgba(var(--accent-color-rgb), 0.1);
+      color: var(--text-color);
     }
     .chat-dropdown-item:last-child {
       border-bottom: none;
@@ -2830,6 +2919,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       font-size: 0.9rem;
+      color: var(--text-color);
     }
     .chat-dropdown-item-actions {
       display: flex;
@@ -3028,7 +3118,7 @@
       border-color: var(--accent-color);
     }
 
-    #settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal {
+    #settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal, #chatNameModal {
       display: none;
       position: fixed;
       top: 0;
@@ -3047,14 +3137,16 @@
     #settingsModal.above-hamburger,
     #lorebookModal.above-hamburger,
     #backgroundModal.above-hamburger,
-    #greetingSelectModal.above-hamburger {
+    #greetingSelectModal.above-hamburger,
+    #chatNameModal.above-hamburger {
         z-index: 1010;
     }
 
     #settingsModal[style*="display: flex"],
     #lorebookModal[style*="display: flex"],
     #backgroundModal[style*="display: flex"],
-    #greetingSelectModal[style*="display: flex"] {
+    #greetingSelectModal[style*="display: flex"],
+    #chatNameModal[style*="display: flex"] {
       opacity: 1;
     }
     .settings-content, .greeting-select-content {
@@ -4035,6 +4127,34 @@
 
     #backgroundModal .settings-content { max-width: 450px; text-align: center; }
     #backgroundModal input[type="file"] { display: block; margin: 1rem auto; }
+    
+    #chatNameModal .settings-content { 
+      max-width: 500px; 
+      width: 90vw;
+      padding: 1.5rem;
+    }
+    @media (max-width: 480px) {
+      #chatNameModal .settings-content {
+        padding: 1rem;
+        max-width: 95vw;
+      }
+      #chatNameModal .settings-content h2 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+      #chatNameModal .settings-content p {
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+      }
+      #chatNameModal .settings-content input {
+        font-size: 1rem;
+        padding: 0.7rem;
+      }
+      #chatNameModal .settings-content button {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
 
     @keyframes slideDownFadeIn {
       from { opacity: 0; transform: translateY(-15px); }
@@ -4411,7 +4531,7 @@
 
 <style>
 /* Animation guard for modal overlays */
-#settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal, #clearChatConfirmModal {
+#settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal, #clearChatConfirmModal, #chatNameModal {
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -4423,7 +4543,7 @@
   padding: 1rem;
   box-sizing: border-box;
 }
-#settingsModal.modal-show, #lorebookModal.modal-show, #backgroundModal.modal-show, #greetingSelectModal.modal-show, #clearChatConfirmModal.modal-show {
+#settingsModal.modal-show, #lorebookModal.modal-show, #backgroundModal.modal-show, #greetingSelectModal.modal-show, #clearChatConfirmModal.modal-show, #chatNameModal.modal-show {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -4784,6 +4904,19 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; } */
 <button onclick="confirmGreetingSelection()" type="button">Выбрать это приветствие</button>
 </div>
 </div>
+<!-- Chat Name Modal -->
+<div id="chatNameModal">
+<div class="settings-content">
+<button aria-label="Закрыть" class="close-btn" onclick="closeChatNameModal()" title="Закрыть">×</button>
+<h2>💬 Создать новый чат</h2>
+<p style="font-size: 0.9rem; color: var(--text-color); opacity: 0.8; margin-bottom: 1rem;">Введите название нового чата для "<span id="chatNameCharacterName"></span>":</p>
+<input aria-label="Название чата" id="chatNameInput" placeholder="Введите название чата" type="text" style="margin-bottom: 1rem;" onkeydown="if(event.key==='Enter') confirmChatName()"/>
+<div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+<button onclick="closeChatNameModal()" type="button" style="background: #ffcdd2; color:#5f2120;">Отмена</button>
+<button onclick="confirmChatName()" type="button">Создать</button>
+</div>
+</div>
+</div>
 <input accept="image/*,application/*,text/*,*/*" id="fileInput" multiple="" style="display:none;" type="file"/>
 <script>
     // --- Global Variables and Constants ---
@@ -4792,6 +4925,113 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; } */
     let activeCharacter = null;
     let activeChatId = null; // ID текущего активного чата для персонажа
     let attachedFiles = [];
+    
+    // Chat Name Modal Global Variables and Functions
+    let currentChatNameCharacter = null;
+    
+    // Make functions globally accessible
+    window.openChatNameModal = function(characterName) {
+        currentChatNameCharacter = characterName;
+        const chatNameEl = document.getElementById("chatNameCharacterName");
+        const input = document.getElementById("chatNameInput");
+        if (!chatNameEl || !input) {
+            console.error("Chat name modal elements not found");
+            return;
+        }
+        chatNameEl.textContent = characterName;
+        let defaultName = "Чат 1";
+        if (typeof getCharacterChats === 'function') {
+            try {
+                const chats = getCharacterChats(characterName);
+                defaultName = `Чат ${chats.length + 1}`;
+            } catch (e) {
+                console.warn("Could not get character chats, using default name", e);
+            }
+        }
+        input.value = defaultName;
+        input.select();
+        
+        const modal = document.getElementById("chatNameModal");
+        if (!modal) {
+            console.error("Chat name modal not found");
+            return;
+        }
+        modal.style.display = "flex";
+        const settingsModal = document.getElementById("settingsModal");
+        if (settingsModal && settingsModal.style.display === "flex") {
+            const settingsZIndex = parseInt(window.getComputedStyle(settingsModal).zIndex, 10) || 1000;
+            modal.style.zIndex = settingsZIndex + 10;
+        } else if (typeof isMobileView === 'function' && isMobileView() && typeof mobileMenuContainer !== 'undefined' && mobileMenuContainer && mobileMenuContainer.classList.contains('open')) {
+            modal.classList.add('above-hamburger');
+        } else {
+            modal.style.zIndex = '';
+        }
+        
+        // Focus on input after modal opens
+        setTimeout(() => input.focus(), 100);
+    };
+    
+    window.closeChatNameModal = function() {
+        const modal = document.getElementById("chatNameModal");
+        if (modal) {
+            modal.style.display = "none";
+            modal.classList.remove('above-hamburger');
+            modal.style.zIndex = '';
+        }
+        const input = document.getElementById("chatNameInput");
+        if (input) input.value = '';
+        currentChatNameCharacter = null;
+    };
+    
+    window.confirmChatName = function() {
+        const input = document.getElementById("chatNameInput");
+        if (!input) return;
+        const chatName = input.value.trim();
+        if (!chatName) {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert("Пожалуйста, введите название чата.");
+            } else {
+                alert("Пожалуйста, введите название чата.");
+            }
+            return;
+        }
+        if (!currentChatNameCharacter) {
+            closeChatNameModal();
+            return;
+        }
+        
+        if (typeof createNewChat === 'function') {
+            const newChat = createNewChat(currentChatNameCharacter, chatName);
+            if (newChat) {
+                activeChatId = newChat.id;
+                if (typeof saveActiveChatForCharacter === 'function') {
+                    saveActiveChatForCharacter(currentChatNameCharacter, newChat.id);
+                }
+                if (typeof setActiveCharacter === 'function') {
+                    setActiveCharacter(currentChatNameCharacter);
+                }
+                if (typeof loadAndRenderMessages === 'function') {
+                    loadAndRenderMessages();
+                }
+                if (typeof renderChatList === 'function') {
+                    const chatList = document.getElementById('chatList');
+                    if (chatList) renderChatList(chatList);
+                    const hamburgerChatList = document.getElementById('mobileMenuChatListInternal');
+                    if (hamburgerChatList) renderChatList(hamburgerChatList);
+                }
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert(`Новый чат "${chatName}" создан.`);
+                } else {
+                    alert(`Новый чат "${chatName}" создан.`);
+                }
+            }
+        }
+        closeChatNameModal();
+    };
+    
+    window.createNewChatPrompt = function(characterName) {
+        openChatNameModal(characterName);
+    };
     let regenerateVariants = [];
     let currentVariantIndex = -1;
     let isBotGenerating = false;
@@ -5434,6 +5674,9 @@ function setupMobileHamburgerMenu() {{
       document.getElementById("greetingSelectModal").addEventListener("click", (e) => {
         if (e.target === document.getElementById("greetingSelectModal")) closeGreetingModal();
       });
+      document.getElementById("chatNameModal").addEventListener("click", (e) => {
+        if (e.target === document.getElementById("chatNameModal")) closeChatNameModal();
+      });
 
       // ИСПРАВЛЕНО: Закрытие модальных окон по Escape
       document.addEventListener("keydown", (e) => {
@@ -5442,6 +5685,7 @@ function setupMobileHamburgerMenu() {{
           closeLorebookModal();
           closeBackgroundModal();
           closeGreetingModal();
+          closeChatNameModal();
           const avatarModal = document.querySelector('.avatar-preview-modal');
           if (avatarModal) document.body.removeChild(avatarModal);
           if (mobileMenuContainer && mobileMenuContainer.classList.contains('open')) {
@@ -6104,11 +6348,29 @@ function setupMobileHamburgerMenu() {{
         const dropdown = chatItem.querySelector('.chat-dropdown');
         manageBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            // Close other dropdowns
+            // Close other dropdowns and reset their margins
             document.querySelectorAll('.chat-dropdown.open').forEach(d => {
-                if (d !== dropdown) d.classList.remove('open');
+                if (d !== dropdown) {
+                    d.classList.remove('open');
+                    const parentItem = d.closest('.chat-item');
+                    if (parentItem) parentItem.style.marginBottom = '';
+                }
             });
             dropdown.classList.toggle('open');
+            // Set margin-bottom to push down following items
+            if (dropdown.classList.contains('open')) {
+                const dropdownHeight = dropdown.scrollHeight;
+                chatItem.style.marginBottom = dropdownHeight + 8 + 'px';
+            } else {
+                chatItem.style.marginBottom = '';
+            }
+        });
+        // Prevent parent hover when hovering dropdown
+        dropdown.addEventListener('mouseenter', () => {
+            chatItem.classList.add('dropdown-hovered');
+        });
+        dropdown.addEventListener('mouseleave', () => {
+            chatItem.classList.remove('dropdown-hovered');
         });
         
         // Chat dropdown items - switch chat
@@ -6120,6 +6382,8 @@ function setupMobileHamburgerMenu() {{
                 if (!chatId) return;
                 // Устанавливаем активный чат перед переключением персонажа
                 activeChatId = chatId;
+                // Сохраняем выбранный чат для персонажа
+                saveActiveChatForCharacter(name, chatId);
                 // Устанавливаем активного персонажа (он не перезапишет activeChatId, так как это тот же персонаж)
                 activeCharacter = name;
                 setActiveCharacter(name);
@@ -6127,6 +6391,7 @@ function setupMobileHamburgerMenu() {{
                 clearVariants();
                 loadAndRenderMessages();
                 dropdown.classList.remove('open');
+                chatItem.style.marginBottom = '';
                 renderChatList(document.getElementById('chatList'));
                 const hamburgerChatList = document.getElementById('mobileMenuChatListInternal');
                 if (hamburgerChatList) renderChatList(hamburgerChatList);
@@ -6142,7 +6407,11 @@ function setupMobileHamburgerMenu() {{
             document.__chatDropdownHandler = true;
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.chat-item')) {
-                    document.querySelectorAll('.chat-dropdown.open').forEach(d => d.classList.remove('open'));
+                    document.querySelectorAll('.chat-dropdown.open').forEach(d => {
+                        d.classList.remove('open');
+                        const parentItem = d.closest('.chat-item');
+                        if (parentItem) parentItem.style.marginBottom = '';
+                    });
                 }
             });
         }
@@ -6215,21 +6484,7 @@ function setupMobileHamburgerMenu() {{
     }
     
     // Chat Management Functions
-    function createNewChatPrompt(characterName) {
-      const chatName = prompt(`Введите название нового чата для "${characterName}":`, `Чат ${getCharacterChats(characterName).length + 1}`);
-      if (chatName && chatName.trim()) {
-        const newChat = createNewChat(characterName, chatName.trim());
-        if (newChat) {
-          activeChatId = newChat.id;
-          setActiveCharacter(characterName);
-          loadAndRenderMessages();
-          renderChatList(document.getElementById('chatList'));
-          const hamburgerChatList = document.getElementById('mobileMenuChatListInternal');
-          if (hamburgerChatList) renderChatList(hamburgerChatList);
-          showCustomAlert(`Новый чат "${chatName.trim()}" создан.`);
-        }
-      }
-    }
+    // createNewChatPrompt is defined globally at the top of the script
     
     function renameChatPrompt(characterName, chatId) {
       const chats = getCharacterChats(characterName);
@@ -6307,6 +6562,26 @@ function setupMobileHamburgerMenu() {{
       }
     }
 
+    // Сохранение и загрузка активного чата для каждого персонажа
+    function saveActiveChatForCharacter(characterName, chatId) {
+      if (characterName && chatId) {
+        try {
+          localStorage.setItem(`activeChat_${characterName}`, chatId);
+        } catch (e) {
+          console.warn('Не удалось сохранить активный чат:', e);
+        }
+      }
+    }
+    
+    function loadActiveChatForCharacter(characterName) {
+      if (!characterName) return null;
+      try {
+        return localStorage.getItem(`activeChat_${characterName}`);
+      } catch (e) {
+        console.warn('Не удалось загрузить активный чат:', e);
+        return null;
+      }
+    }
 
     function setActiveCharacter(name) {
       if (!characters[name]) {
@@ -6321,13 +6596,24 @@ function setupMobileHamburgerMenu() {{
       // Инициализируем активный чат, если его нет или если переключились на другого персонажа
       const chats = getCharacterChats(name);
       if (chats.length > 0) {
-        // Устанавливаем первый чат только если переключились на другого персонажа или активный чат не установлен
-        if (wasDifferentCharacter || !activeChatId || !chats.find(c => c.id === activeChatId)) {
+        // Пытаемся загрузить сохраненный активный чат для этого персонажа
+        const savedChatId = loadActiveChatForCharacter(name);
+        const savedChat = savedChatId ? chats.find(c => c.id === savedChatId) : null;
+        
+        if (savedChat) {
+          // Используем сохраненный чат
+          activeChatId = savedChat.id;
+        } else if (wasDifferentCharacter || !activeChatId || !chats.find(c => c.id === activeChatId)) {
+          // Если сохраненного чата нет, используем первый чат
           activeChatId = chats[0].id;
+          saveActiveChatForCharacter(name, activeChatId);
         }
       } else {
         const newChat = createNewChat(name, 'Чат 1');
         activeChatId = newChat ? newChat.id : 'default';
+        if (newChat) {
+          saveActiveChatForCharacter(name, activeChatId);
+        }
       }
 
       // --- Populate all settings fields for the active character ---
@@ -6461,10 +6747,14 @@ function setupMobileHamburgerMenu() {{
         if (activeChatId === chatId && name === activeCharacter) {
           if (filteredChats.length > 0) {
             activeChatId = filteredChats[0].id;
+            saveActiveChatForCharacter(name, activeChatId);
           } else {
             // Создаем новый дефолтный чат, если все удалены
             const newChat = createNewChat(name, 'Чат 1');
             activeChatId = newChat ? newChat.id : null;
+            if (newChat) {
+              saveActiveChatForCharacter(name, activeChatId);
+            }
           }
         }
         return true;
@@ -9529,6 +9819,9 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
       document.getElementById("greetingSelectModal").addEventListener("click", (e) => {
         if (e.target === document.getElementById("greetingSelectModal")) closeGreetingModal();
       });
+      document.getElementById("chatNameModal").addEventListener("click", (e) => {
+        if (e.target === document.getElementById("chatNameModal")) closeChatNameModal();
+      });
 
       // ИСПРАВЛЕНО: Закрытие модальных окон по Escape
       document.addEventListener("keydown", (e) => {
@@ -9537,6 +9830,7 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
           closeLorebookModal();
           closeBackgroundModal();
           closeGreetingModal();
+          closeChatNameModal();
           const avatarModal = document.querySelector('.avatar-preview-modal');
           if (avatarModal) document.body.removeChild(avatarModal);
           if (mobileMenuContainer && mobileMenuContainer.classList.contains('open')) {
@@ -10199,11 +10493,29 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
         const dropdown = chatItem.querySelector('.chat-dropdown');
         manageBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            // Close other dropdowns
+            // Close other dropdowns and reset their margins
             document.querySelectorAll('.chat-dropdown.open').forEach(d => {
-                if (d !== dropdown) d.classList.remove('open');
+                if (d !== dropdown) {
+                    d.classList.remove('open');
+                    const parentItem = d.closest('.chat-item');
+                    if (parentItem) parentItem.style.marginBottom = '';
+                }
             });
             dropdown.classList.toggle('open');
+            // Set margin-bottom to push down following items
+            if (dropdown.classList.contains('open')) {
+                const dropdownHeight = dropdown.scrollHeight;
+                chatItem.style.marginBottom = dropdownHeight + 8 + 'px';
+            } else {
+                chatItem.style.marginBottom = '';
+            }
+        });
+        // Prevent parent hover when hovering dropdown
+        dropdown.addEventListener('mouseenter', () => {
+            chatItem.classList.add('dropdown-hovered');
+        });
+        dropdown.addEventListener('mouseleave', () => {
+            chatItem.classList.remove('dropdown-hovered');
         });
         
         // Chat dropdown items - switch chat
@@ -10215,6 +10527,8 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
                 if (!chatId) return;
                 // Устанавливаем активный чат перед переключением персонажа
                 activeChatId = chatId;
+                // Сохраняем выбранный чат для персонажа
+                saveActiveChatForCharacter(name, chatId);
                 // Устанавливаем активного персонажа (он не перезапишет activeChatId, так как это тот же персонаж)
                 activeCharacter = name;
                 setActiveCharacter(name);
@@ -10222,6 +10536,7 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
                 clearVariants();
                 loadAndRenderMessages();
                 dropdown.classList.remove('open');
+                chatItem.style.marginBottom = '';
                 renderChatList(document.getElementById('chatList'));
                 const hamburgerChatList = document.getElementById('mobileMenuChatListInternal');
                 if (hamburgerChatList) renderChatList(hamburgerChatList);
@@ -10237,7 +10552,11 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
             document.__chatDropdownHandler = true;
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.chat-item')) {
-                    document.querySelectorAll('.chat-dropdown.open').forEach(d => d.classList.remove('open'));
+                    document.querySelectorAll('.chat-dropdown.open').forEach(d => {
+                        d.classList.remove('open');
+                        const parentItem = d.closest('.chat-item');
+                        if (parentItem) parentItem.style.marginBottom = '';
+                    });
                 }
             });
         }
@@ -10310,21 +10629,7 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
     }
     
     // Chat Management Functions
-    function createNewChatPrompt(characterName) {
-      const chatName = prompt(`Введите название нового чата для "${characterName}":`, `Чат ${getCharacterChats(characterName).length + 1}`);
-      if (chatName && chatName.trim()) {
-        const newChat = createNewChat(characterName, chatName.trim());
-        if (newChat) {
-          activeChatId = newChat.id;
-          setActiveCharacter(characterName);
-          loadAndRenderMessages();
-          renderChatList(document.getElementById('chatList'));
-          const hamburgerChatList = document.getElementById('mobileMenuChatListInternal');
-          if (hamburgerChatList) renderChatList(hamburgerChatList);
-          showCustomAlert(`Новый чат "${chatName.trim()}" создан.`);
-        }
-      }
-    }
+    // createNewChatPrompt is defined globally at the top of the script
     
     function renameChatPrompt(characterName, chatId) {
       const chats = getCharacterChats(characterName);
@@ -10402,6 +10707,26 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
       }
     }
 
+    // Сохранение и загрузка активного чата для каждого персонажа
+    function saveActiveChatForCharacter(characterName, chatId) {
+      if (characterName && chatId) {
+        try {
+          localStorage.setItem(`activeChat_${characterName}`, chatId);
+        } catch (e) {
+          console.warn('Не удалось сохранить активный чат:', e);
+        }
+      }
+    }
+    
+    function loadActiveChatForCharacter(characterName) {
+      if (!characterName) return null;
+      try {
+        return localStorage.getItem(`activeChat_${characterName}`);
+      } catch (e) {
+        console.warn('Не удалось загрузить активный чат:', e);
+        return null;
+      }
+    }
 
     function setActiveCharacter(name) {
       if (!characters[name]) {
@@ -10416,13 +10741,24 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
       // Инициализируем активный чат, если его нет или если переключились на другого персонажа
       const chats = getCharacterChats(name);
       if (chats.length > 0) {
-        // Устанавливаем первый чат только если переключились на другого персонажа или активный чат не установлен
-        if (wasDifferentCharacter || !activeChatId || !chats.find(c => c.id === activeChatId)) {
+        // Пытаемся загрузить сохраненный активный чат для этого персонажа
+        const savedChatId = loadActiveChatForCharacter(name);
+        const savedChat = savedChatId ? chats.find(c => c.id === savedChatId) : null;
+        
+        if (savedChat) {
+          // Используем сохраненный чат
+          activeChatId = savedChat.id;
+        } else if (wasDifferentCharacter || !activeChatId || !chats.find(c => c.id === activeChatId)) {
+          // Если сохраненного чата нет, используем первый чат
           activeChatId = chats[0].id;
+          saveActiveChatForCharacter(name, activeChatId);
         }
       } else {
         const newChat = createNewChat(name, 'Чат 1');
         activeChatId = newChat ? newChat.id : 'default';
+        if (newChat) {
+          saveActiveChatForCharacter(name, activeChatId);
+        }
       }
 
       // --- Populate all settings fields for the active character ---
@@ -10556,10 +10892,14 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
         if (activeChatId === chatId && name === activeCharacter) {
           if (filteredChats.length > 0) {
             activeChatId = filteredChats[0].id;
+            saveActiveChatForCharacter(name, activeChatId);
           } else {
             // Создаем новый дефолтный чат, если все удалены
             const newChat = createNewChat(name, 'Чат 1');
             activeChatId = newChat ? newChat.id : null;
+            if (newChat) {
+              saveActiveChatForCharacter(name, activeChatId);
+            }
           }
         }
         return true;
@@ -12802,7 +13142,7 @@ window.addEventListener('resize', applySettingsLayout);
 
 <script>
 (function(){
-  const modalIds = ['settingsModal','lorebookModal','backgroundModal','greetingSelectModal','clearChatConfirmModal'];
+  const modalIds = ['settingsModal','lorebookModal','backgroundModal','greetingSelectModal','clearChatConfirmModal','chatNameModal'];
   function addShowClass(modal) {
     if (!modal) return;
     modal.classList.add('modal-show');
