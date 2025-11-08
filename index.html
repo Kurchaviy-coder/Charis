@@ -8089,6 +8089,11 @@ function setupMobileHamburgerMenu() {{
             let reply;
             const systemPromptText = getSystemContent(charData, userMessageContentForSystem);
 
+            // Ensure we have the latest values for Vercel proxy settings
+            const currentUseVercelProxy = document.getElementById("enableVercelProxy")?.checked || useVercelProxy;
+            const currentGoogleApiKey = document.getElementById("googleApiKey")?.value.trim() || googleApiKey;
+            const currentGoogleApiModel = document.getElementById("googleApiModel")?.value || googleApiModel;
+
             if (useGoogleApi && googleApiKey && googleApiModel) {
                 let geminiContents = [];
                  historyForAPI.forEach(m => {
@@ -8119,24 +8124,107 @@ function setupMobileHamburgerMenu() {{
                     return true;
                 });
 
-                const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${googleApiModel}:generateContent?key=${googleApiKey}`;
-                const geminiRequestBody = {
-                    systemInstruction: { parts: [{ text: systemPromptText }] },
-                    contents: geminiContents,
-                    generationConfig: {
-                        temperature: parseFloat(document.getElementById("temperature").value) || 0.7,
-                        maxOutputTokens: parseInt(document.getElementById("maxTokens").value) || 1024
+                const temperature = parseFloat(document.getElementById("temperature").value) || 0.7;
+                const maxOutputTokens = parseInt(document.getElementById("maxTokens").value) || 1024;
+
+                // Check if Vercel proxy is enabled (same logic as fetchGeminiChatCompletion)
+                let response, result;
+                let streamingMessageDiv = messageDivToUpdate;
+                
+                if (currentUseVercelProxy && currentGoogleApiKey && currentGoogleApiModel) {
+                    // Convert Gemini format to OpenAI format for Vercel proxy
+                    const messages = [];
+                    if (systemPromptText) {
+                        messages.push({ role: "system", content: systemPromptText });
                     }
-                };
-                const response = await fetch(geminiUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(geminiRequestBody)
-                });
-                if (!response.ok) throw new Error(`Google API Ошибка: ${response.status} ${await response.text()}`);
-                const result = await response.json();
-                reply = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                if (!reply && !(result.candidates && result.candidates[0].finishReason === "MAX_TOKENS")) throw new Error("Пустой ответ от Google API.");
+                    geminiContents.forEach(item => {
+                        const role = item.role === "user" ? "user" : "assistant";
+                        const content = item.parts.map(part => part.text).join("");
+                        if (content) {
+                            messages.push({ role: role, content: content });
+                        }
+                    });
+
+                    const vercelRequestBody = {
+                        model: currentGoogleApiModel,
+                        messages: messages,
+                        temperature: temperature,
+                        max_tokens: maxOutputTokens,
+                        stream: true
+                    };
+
+                    response = await fetch(VERCEL_PROXY_URL, {
+                        method: "POST",
+                        headers: { 
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${currentGoogleApiKey}`
+                        },
+                        body: JSON.stringify(vercelRequestBody)
+                    });
+
+                    if (!response.ok) {
+                        const errorBody = await response.text();
+                        throw new Error(`Vercel Proxy Ошибка: ${response.status} - ${errorBody}`);
+                    }
+
+                    // Handle streaming response
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+                    let streamedContent = "";
+                    let fullReply = "";
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split("\n").filter(line => line.trim().startsWith("data: "));
+                        for (const line of lines) {
+                            if (line.includes("[DONE]")) break;
+                            const jsonString = line.replace(/^data: /, "");
+                            try {
+                                const parsed = JSON.parse(jsonString);
+                                const content = parsed.choices?.[0]?.delta?.content;
+                                if (content) {
+                                    streamedContent += content;
+                                    fullReply = streamedContent;
+                                    // Update DOM directly during streaming
+                                    if (streamingMessageDiv) {
+                                        streamingMessageDiv.innerHTML = `<strong>${characterForResponse}:</strong>${marked.parse(fullReply)}`;
+                                        processCodeBlocks(streamingMessageDiv);
+                                        enableTranslationForInlineCode(streamingMessageDiv);
+                                        scrollToBottom(true);
+                                    }
+                                }
+                            } catch (e) {
+                                // Ignore JSON parse errors for incomplete chunks
+                            }
+                        }
+                    }
+
+                    if (!fullReply && streamedContent) fullReply = streamedContent;
+                    reply = fullReply;
+                } else {
+                    // Use direct Gemini API
+                    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${googleApiModel}:generateContent?key=${googleApiKey}`;
+                    const geminiRequestBody = {
+                        systemInstruction: { parts: [{ text: systemPromptText }] },
+                        contents: geminiContents,
+                        generationConfig: {
+                            temperature: temperature,
+                            maxOutputTokens: maxOutputTokens
+                        }
+                    };
+                    response = await fetch(geminiUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(geminiRequestBody)
+                    });
+                    if (!response.ok) throw new Error(`Google API Ошибка: ${response.status} ${await response.text()}`);
+                    result = await response.json();
+                    reply = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                    if (!reply && !(result.candidates && result.candidates[0].finishReason === "MAX_TOKENS")) throw new Error("Пустой ответ от Google API.");
+                }
 
                 newVariantChatState = JSON.parse(JSON.stringify(allMessages.slice(0, index)));
                 const newBotMsgData = {
@@ -8153,7 +8241,10 @@ function setupMobileHamburgerMenu() {{
                 allMessages = [...newVariantChatState];
                 if (currentMode === "personal") saveChat(getCurrentCharacterName(), allMessages);
                 else saveRoomChat(allMessages);
-                updateMessageInDOM(index, allMessages[index]);
+                // Only update DOM if it wasn't updated during streaming (when Vercel proxy is used)
+                if (!(currentUseVercelProxy && streamingMessageDiv)) {
+                    updateMessageInDOM(index, allMessages[index]);
+                }
                 scrollToBottom(true);
                 shouldScrollToBottom = false;
 
@@ -8186,16 +8277,30 @@ function setupMobileHamburgerMenu() {{
                     };
                 }));
 
-                const apiKey = document.getElementById("apiKey").value;
-                const apiUrl = document.getElementById("apiUrl").value;
-                const model = charData.model || document.getElementById("model").value;
                 const temperature = parseFloat(document.getElementById("temperature").value) || 0.7;
                 const max_tokens = parseInt(document.getElementById("maxTokens").value) || 1024;
 
-                const response = await fetch(apiUrl, {
+                // Check if Vercel proxy is enabled
+                // Ensure we have the latest values for Vercel proxy settings
+                const currentUseVercelProxy = document.getElementById("enableVercelProxy")?.checked || useVercelProxy;
+                const currentGoogleApiKey = document.getElementById("googleApiKey")?.value.trim() || googleApiKey;
+                const currentGoogleApiModel = document.getElementById("googleApiModel")?.value || googleApiModel;
+                
+                let actualApiUrl, actualApiKey, actualModel;
+                if (currentUseVercelProxy && currentGoogleApiKey && currentGoogleApiModel) {
+                    actualApiUrl = VERCEL_PROXY_URL;
+                    actualApiKey = currentGoogleApiKey;
+                    actualModel = currentGoogleApiModel;
+                } else {
+                    actualApiUrl = document.getElementById("apiUrl").value;
+                    actualApiKey = document.getElementById("apiKey").value;
+                    actualModel = charData.model || document.getElementById("model").value;
+                }
+
+                const response = await fetch(actualApiUrl, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-                    body: JSON.stringify({ model, messages: messagesForStdAPI, stream: true, max_tokens, temperature })
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${actualApiKey}` },
+                    body: JSON.stringify({ model: actualModel, messages: messagesForStdAPI, stream: true, max_tokens, temperature })
                 });
                 if (!response.ok) throw new Error(`HTTP ошибка! Статус: ${response.status} ${await response.text()}`);
 
