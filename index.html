@@ -6813,10 +6813,110 @@ function setupMobileHamburgerMenu() {{
     }
 
     let allMessages = [];
+    
+    // Переменные для ленивой загрузки
+    let lazyLoadObserver = null;
+    let renderedStartIndex = 0; // Индекс первого отрендеренного сообщения
+    let renderedEndIndex = 0; // Индекс последнего отрендеренного сообщения
+    const LAZY_LOAD_BUFFER = 50; // Количество сообщений для начальной загрузки
+    const LAZY_LOAD_CHUNK = 30; // Количество сообщений для подгрузки при прокрутке вверх
+
+    // Инициализация Intersection Observer для ленивой загрузки
+    function initLazyLoadObserver() {
+        if (lazyLoadObserver) {
+            lazyLoadObserver.disconnect();
+        }
+        
+        lazyLoadObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && entry.target.dataset.lazyLoadTrigger === 'top') {
+                    loadMoreMessagesUp();
+                }
+            });
+        }, {
+            root: messagesBox,
+            rootMargin: '200px',
+            threshold: 0.1
+        });
+    }
+
+    // Подгрузка старых сообщений при прокрутке вверх
+    function loadMoreMessagesUp() {
+        if (renderedStartIndex <= 0) return;
+        
+        const loadCount = Math.min(LAZY_LOAD_CHUNK, renderedStartIndex);
+        const newStartIndex = renderedStartIndex - loadCount;
+        
+        const fragment = document.createDocumentFragment();
+        const scrollHeightBefore = messagesBox.scrollHeight;
+        const scrollTopBefore = messagesBox.scrollTop;
+        
+        // Рендерим сообщения в обратном порядке и вставляем в начало
+        for (let i = newStartIndex; i < renderedStartIndex; i++) {
+            const container = createMessageContainerDOM(allMessages[i], i);
+            fragment.appendChild(container);
+        }
+        
+        const firstChild = messagesBox.firstElementChild;
+        if (firstChild && firstChild.dataset.lazyLoadTrigger === 'top') {
+            messagesBox.removeChild(firstChild);
+        }
+        
+        if (messagesBox.firstChild) {
+            messagesBox.insertBefore(fragment, messagesBox.firstChild);
+        } else {
+            messagesBox.appendChild(fragment);
+        }
+        
+        // Сохраняем позицию прокрутки
+        const scrollHeightAfter = messagesBox.scrollHeight;
+        const heightDiff = scrollHeightAfter - scrollHeightBefore;
+        messagesBox.scrollTop = scrollTopBefore + heightDiff;
+        
+        renderedStartIndex = newStartIndex;
+        
+        // Добавляем триггер для следующей подгрузки, если есть еще сообщения
+        if (renderedStartIndex > 0) {
+            addLazyLoadTrigger('top');
+        }
+    }
+
+    // Добавление триггера для ленивой загрузки
+    function addLazyLoadTrigger(position) {
+        const existingTrigger = messagesBox.querySelector(`[data-lazy-load-trigger="${position}"]`);
+        if (existingTrigger) return;
+        
+        const trigger = document.createElement('div');
+        trigger.dataset.lazyLoadTrigger = position;
+        trigger.style.height = '1px';
+        trigger.style.width = '100%';
+        trigger.style.visibility = 'hidden';
+        
+        if (position === 'top') {
+            messagesBox.insertBefore(trigger, messagesBox.firstChild);
+        } else {
+            messagesBox.appendChild(trigger);
+        }
+        
+        if (lazyLoadObserver) {
+            lazyLoadObserver.observe(trigger);
+        }
+    }
+
+    // Рендеринг диапазона сообщений
+    function renderMessageRange(startIndex, endIndex) {
+        const fragment = document.createDocumentFragment();
+        for (let i = startIndex; i <= endIndex && i < allMessages.length; i++) {
+            const container = createMessageContainerDOM(allMessages[i], i);
+            fragment.appendChild(container);
+        }
+        return fragment;
+    }
 
     function loadAndRenderMessages(scrollToIndex = -1) {
         messagesBox.innerHTML = "";
         let characterForBackground = null;
+        const isInitialLoad = renderedStartIndex === 0 && renderedEndIndex === 0;
 
         if (currentMode === "personal") {
             const name = getCurrentCharacterName();
@@ -6824,6 +6924,8 @@ function setupMobileHamburgerMenu() {{
                 displayInitialHelperMessage();
                 applyBackground(null);
                 allMessages = [];
+                renderedStartIndex = 0;
+                renderedEndIndex = 0;
                 return;
             }
             // Инициализируем активный чат, если его нет
@@ -6848,6 +6950,9 @@ function setupMobileHamburgerMenu() {{
                  helperP.style.textAlign = 'center'; helperP.style.color = 'var(--text-color)'; helperP.style.padding = '20px'; helperP.style.fontStyle = 'italic'; helperP.style.opacity = '0.7';
                  helperP.textContent = 'Нет сообщений. Начните диалог!';
                  messagesBox.appendChild(helperP);
+                 renderedStartIndex = 0;
+                 renderedEndIndex = 0;
+                 return;
             }
         } else {
             allMessages = loadRoomChat();
@@ -6857,23 +6962,65 @@ function setupMobileHamburgerMenu() {{
                 helperP.style.textAlign = 'center'; helperP.style.color = 'var(--text-color)'; helperP.style.padding = '20px'; helperP.style.fontStyle = 'italic'; helperP.style.opacity = '0.7';
                 helperP.textContent = 'Нет сообщений в групповом чате. Начните диалог!';
                 messagesBox.appendChild(helperP);
+                renderedStartIndex = 0;
+                renderedEndIndex = 0;
+                return;
             }
         }
         applyBackground(characterForBackground);
 
-        const fragment = document.createDocumentFragment();
-        allMessages.forEach((msg, i) => {
-            const container = createMessageContainerDOM(msg, i);
-            fragment.appendChild(container);
-        });
-        messagesBox.appendChild(fragment);
+        // Временно отключаем smooth scroll для мгновенной прокрутки при первой загрузке
+        const isInitialScroll = shouldScrollToBottom || isInitialLoad;
+        let originalScrollBehavior = '';
+        if (isInitialScroll) {
+            originalScrollBehavior = messagesBox.style.scrollBehavior;
+            messagesBox.style.scrollBehavior = 'auto';
+        }
 
+        // Ленивая загрузка: рендерим только последние N сообщений
+        if (allMessages.length === 0) {
+            renderedStartIndex = 0;
+            renderedEndIndex = 0;
+        } else {
+            const totalMessages = allMessages.length;
+            renderedEndIndex = totalMessages - 1;
+            renderedStartIndex = Math.max(0, totalMessages - LAZY_LOAD_BUFFER);
+            
+            const fragment = renderMessageRange(renderedStartIndex, renderedEndIndex);
+            messagesBox.appendChild(fragment);
+            
+            // Сразу устанавливаем scrollTop в конец, до рендеринга браузером
+            if (isInitialScroll) {
+                messagesBox.scrollTop = messagesBox.scrollHeight;
+            }
+            
+            // Добавляем триггер для подгрузки старых сообщений, если они есть
+            if (renderedStartIndex > 0) {
+                addLazyLoadTrigger('top');
+            }
+        }
+
+        // Инициализируем observer для ленивой загрузки
+        initLazyLoadObserver();
+
+        // Прокрутка: сразу в конец без анимации при первой загрузке
         if (scrollToIndex !== -1 && scrollToIndex < allMessages.length) {
-            const targetMsgEl = messagesBox.children[scrollToIndex];
-            if (targetMsgEl) targetMsgEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        } else if (shouldScrollToBottom) {
-            scrollToBottom(true);
+            // Для редактирования сообщений - используем smooth scroll
+            requestAnimationFrame(() => {
+                const targetMsgEl = messagesBox.querySelector(`[data-index="${scrollToIndex}"]`);
+                if (targetMsgEl) {
+                    targetMsgEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                }
+            });
+        } else if (isInitialScroll) {
+            // Убеждаемся, что scrollTop установлен в конец
+            messagesBox.scrollTop = messagesBox.scrollHeight;
             shouldScrollToBottom = false;
+            
+            // Восстанавливаем scroll-behavior после рендеринга
+            requestAnimationFrame(() => {
+                messagesBox.style.scrollBehavior = originalScrollBehavior || '';
+            });
         }
     }
 
@@ -7001,6 +7148,7 @@ function setupMobileHamburgerMenu() {{
     function appendNewMessageToDOM(msgData, index) {
         const container = createMessageContainerDOM(msgData, index);
         messagesBox.appendChild(container);
+        renderedEndIndex = index; // Обновляем индекс последнего отрендеренного сообщения
         requestAnimationFrame(() => {
             container.style.opacity = 1;
             container.style.transform = 'translateY(0)';
@@ -10958,10 +11106,110 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
     }
 
     let allMessages = [];
+    
+    // Переменные для ленивой загрузки
+    let lazyLoadObserver = null;
+    let renderedStartIndex = 0; // Индекс первого отрендеренного сообщения
+    let renderedEndIndex = 0; // Индекс последнего отрендеренного сообщения
+    const LAZY_LOAD_BUFFER = 50; // Количество сообщений для начальной загрузки
+    const LAZY_LOAD_CHUNK = 30; // Количество сообщений для подгрузки при прокрутке вверх
+
+    // Инициализация Intersection Observer для ленивой загрузки
+    function initLazyLoadObserver() {
+        if (lazyLoadObserver) {
+            lazyLoadObserver.disconnect();
+        }
+        
+        lazyLoadObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && entry.target.dataset.lazyLoadTrigger === 'top') {
+                    loadMoreMessagesUp();
+                }
+            });
+        }, {
+            root: messagesBox,
+            rootMargin: '200px',
+            threshold: 0.1
+        });
+    }
+
+    // Подгрузка старых сообщений при прокрутке вверх
+    function loadMoreMessagesUp() {
+        if (renderedStartIndex <= 0) return;
+        
+        const loadCount = Math.min(LAZY_LOAD_CHUNK, renderedStartIndex);
+        const newStartIndex = renderedStartIndex - loadCount;
+        
+        const fragment = document.createDocumentFragment();
+        const scrollHeightBefore = messagesBox.scrollHeight;
+        const scrollTopBefore = messagesBox.scrollTop;
+        
+        // Рендерим сообщения в обратном порядке и вставляем в начало
+        for (let i = newStartIndex; i < renderedStartIndex; i++) {
+            const container = createMessageContainerDOM(allMessages[i], i);
+            fragment.appendChild(container);
+        }
+        
+        const firstChild = messagesBox.firstElementChild;
+        if (firstChild && firstChild.dataset.lazyLoadTrigger === 'top') {
+            messagesBox.removeChild(firstChild);
+        }
+        
+        if (messagesBox.firstChild) {
+            messagesBox.insertBefore(fragment, messagesBox.firstChild);
+        } else {
+            messagesBox.appendChild(fragment);
+        }
+        
+        // Сохраняем позицию прокрутки
+        const scrollHeightAfter = messagesBox.scrollHeight;
+        const heightDiff = scrollHeightAfter - scrollHeightBefore;
+        messagesBox.scrollTop = scrollTopBefore + heightDiff;
+        
+        renderedStartIndex = newStartIndex;
+        
+        // Добавляем триггер для следующей подгрузки, если есть еще сообщения
+        if (renderedStartIndex > 0) {
+            addLazyLoadTrigger('top');
+        }
+    }
+
+    // Добавление триггера для ленивой загрузки
+    function addLazyLoadTrigger(position) {
+        const existingTrigger = messagesBox.querySelector(`[data-lazy-load-trigger="${position}"]`);
+        if (existingTrigger) return;
+        
+        const trigger = document.createElement('div');
+        trigger.dataset.lazyLoadTrigger = position;
+        trigger.style.height = '1px';
+        trigger.style.width = '100%';
+        trigger.style.visibility = 'hidden';
+        
+        if (position === 'top') {
+            messagesBox.insertBefore(trigger, messagesBox.firstChild);
+        } else {
+            messagesBox.appendChild(trigger);
+        }
+        
+        if (lazyLoadObserver) {
+            lazyLoadObserver.observe(trigger);
+        }
+    }
+
+    // Рендеринг диапазона сообщений
+    function renderMessageRange(startIndex, endIndex) {
+        const fragment = document.createDocumentFragment();
+        for (let i = startIndex; i <= endIndex && i < allMessages.length; i++) {
+            const container = createMessageContainerDOM(allMessages[i], i);
+            fragment.appendChild(container);
+        }
+        return fragment;
+    }
 
     function loadAndRenderMessages(scrollToIndex = -1) {
         messagesBox.innerHTML = "";
         let characterForBackground = null;
+        const isInitialLoad = renderedStartIndex === 0 && renderedEndIndex === 0;
 
         if (currentMode === "personal") {
             const name = getCurrentCharacterName();
@@ -10969,6 +11217,8 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
                 displayInitialHelperMessage();
                 applyBackground(null);
                 allMessages = [];
+                renderedStartIndex = 0;
+                renderedEndIndex = 0;
                 return;
             }
             // Инициализируем активный чат, если его нет
@@ -10993,6 +11243,9 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
                  helperP.style.textAlign = 'center'; helperP.style.color = 'var(--text-color)'; helperP.style.padding = '20px'; helperP.style.fontStyle = 'italic'; helperP.style.opacity = '0.7';
                  helperP.textContent = 'Нет сообщений. Начните диалог!';
                  messagesBox.appendChild(helperP);
+                 renderedStartIndex = 0;
+                 renderedEndIndex = 0;
+                 return;
             }
         } else {
             allMessages = loadRoomChat();
@@ -11002,23 +11255,65 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
                 helperP.style.textAlign = 'center'; helperP.style.color = 'var(--text-color)'; helperP.style.padding = '20px'; helperP.style.fontStyle = 'italic'; helperP.style.opacity = '0.7';
                 helperP.textContent = 'Нет сообщений в групповом чате. Начните диалог!';
                 messagesBox.appendChild(helperP);
+                renderedStartIndex = 0;
+                renderedEndIndex = 0;
+                return;
             }
         }
         applyBackground(characterForBackground);
 
-        const fragment = document.createDocumentFragment();
-        allMessages.forEach((msg, i) => {
-            const container = createMessageContainerDOM(msg, i);
-            fragment.appendChild(container);
-        });
-        messagesBox.appendChild(fragment);
+        // Временно отключаем smooth scroll для мгновенной прокрутки при первой загрузке
+        const isInitialScroll = shouldScrollToBottom || isInitialLoad;
+        let originalScrollBehavior = '';
+        if (isInitialScroll) {
+            originalScrollBehavior = messagesBox.style.scrollBehavior;
+            messagesBox.style.scrollBehavior = 'auto';
+        }
 
+        // Ленивая загрузка: рендерим только последние N сообщений
+        if (allMessages.length === 0) {
+            renderedStartIndex = 0;
+            renderedEndIndex = 0;
+        } else {
+            const totalMessages = allMessages.length;
+            renderedEndIndex = totalMessages - 1;
+            renderedStartIndex = Math.max(0, totalMessages - LAZY_LOAD_BUFFER);
+            
+            const fragment = renderMessageRange(renderedStartIndex, renderedEndIndex);
+            messagesBox.appendChild(fragment);
+            
+            // Сразу устанавливаем scrollTop в конец, до рендеринга браузером
+            if (isInitialScroll) {
+                messagesBox.scrollTop = messagesBox.scrollHeight;
+            }
+            
+            // Добавляем триггер для подгрузки старых сообщений, если они есть
+            if (renderedStartIndex > 0) {
+                addLazyLoadTrigger('top');
+            }
+        }
+
+        // Инициализируем observer для ленивой загрузки
+        initLazyLoadObserver();
+
+        // Прокрутка: сразу в конец без анимации при первой загрузке
         if (scrollToIndex !== -1 && scrollToIndex < allMessages.length) {
-            const targetMsgEl = messagesBox.children[scrollToIndex];
-            if (targetMsgEl) targetMsgEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        } else if (shouldScrollToBottom) {
-            scrollToBottom(true);
+            // Для редактирования сообщений - используем smooth scroll
+            requestAnimationFrame(() => {
+                const targetMsgEl = messagesBox.querySelector(`[data-index="${scrollToIndex}"]`);
+                if (targetMsgEl) {
+                    targetMsgEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                }
+            });
+        } else if (isInitialScroll) {
+            // Убеждаемся, что scrollTop установлен в конец
+            messagesBox.scrollTop = messagesBox.scrollHeight;
             shouldScrollToBottom = false;
+            
+            // Восстанавливаем scroll-behavior после рендеринга
+            requestAnimationFrame(() => {
+                messagesBox.style.scrollBehavior = originalScrollBehavior || '';
+            });
         }
     }
 
@@ -11146,6 +11441,7 @@ document.addEventListener('DOMContentLoaded', function(){ initSettingsBindings()
     function appendNewMessageToDOM(msgData, index) {
         const container = createMessageContainerDOM(msgData, index);
         messagesBox.appendChild(container);
+        renderedEndIndex = index; // Обновляем индекс последнего отрендеренного сообщения
         requestAnimationFrame(() => {
             container.style.opacity = 1;
             container.style.transform = 'translateY(0)';
