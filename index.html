@@ -8139,9 +8139,31 @@ function setupMobileHamburgerMenu() {{
                     }
                     geminiContents.forEach(item => {
                         const role = item.role === "user" ? "user" : "assistant";
-                        const content = item.parts.map(part => part.text).join("");
-                        if (content) {
-                            messages.push({ role: role, content: content });
+                        
+                        // Convert parts to OpenAI format (supporting both text and images)
+                        const contentArray = [];
+                        item.parts.forEach(part => {
+                            if (part.text) {
+                                // Text part
+                                contentArray.push({ type: "text", text: part.text });
+                            } else if (part.inlineData) {
+                                // Image part - convert inlineData to data URL format
+                                const dataUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                                contentArray.push({ 
+                                    type: "image_url", 
+                                    image_url: { url: dataUrl } 
+                                });
+                            }
+                        });
+                        
+                        // If we have content (text or images), add the message
+                        if (contentArray.length > 0) {
+                            // If only one text part, use simple string format for compatibility
+                            // Otherwise use array format for multimodal content
+                            const finalContent = contentArray.length === 1 && contentArray[0].type === "text" 
+                                ? contentArray[0].text 
+                                : contentArray;
+                            messages.push({ role: role, content: finalContent });
                         }
                     });
 
@@ -8853,9 +8875,31 @@ function setupMobileHamburgerMenu() {{
                 }
                 geminiContents.forEach(item => {
                     const role = item.role === "user" ? "user" : "assistant";
-                    const content = item.parts.map(part => part.text).join("");
-                    if (content) {
-                        messages.push({ role: role, content: content });
+                    
+                    // Convert parts to OpenAI format (supporting both text and images)
+                    const contentArray = [];
+                    item.parts.forEach(part => {
+                        if (part.text) {
+                            // Text part
+                            contentArray.push({ type: "text", text: part.text });
+                        } else if (part.inlineData) {
+                            // Image part - convert inlineData to data URL format
+                            const dataUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                            contentArray.push({ 
+                                type: "image_url", 
+                                image_url: { url: dataUrl } 
+                            });
+                        }
+                    });
+                    
+                    // If we have content (text or images), add the message
+                    if (contentArray.length > 0) {
+                        // If only one text part, use simple string format for compatibility
+                        // Otherwise use array format for multimodal content
+                        const finalContent = contentArray.length === 1 && contentArray[0].type === "text" 
+                            ? contentArray[0].text 
+                            : contentArray;
+                        messages.push({ role: role, content: finalContent });
                     }
                 });
 
