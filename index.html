@@ -775,7 +775,7 @@
     .chat-dropdown-item-actions {
       display: flex;
       gap: 4px;
-      opacity: 0;
+      opacity: 1;
       transition: opacity var(--transition-fast);
     }
     .chat-dropdown-item:hover .chat-dropdown-item-actions {
@@ -1012,7 +1012,7 @@
       border-color: var(--accent-color);
     }
 
-    #settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal, #chatNameModal, #newCharacterModal {
+    #settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal, #chatNameModal, #newCharacterModal, #renameChatModal {
       display: none;
       position: fixed;
       top: 0;
@@ -1033,7 +1033,8 @@
     #backgroundModal.above-hamburger,
     #greetingSelectModal.above-hamburger,
     #chatNameModal.above-hamburger,
-    #newCharacterModal.above-hamburger {
+    #newCharacterModal.above-hamburger,
+    #renameChatModal.above-hamburger {
         z-index: 1010;
     }
 
@@ -1042,7 +1043,8 @@
     #backgroundModal[style*="display: flex"],
     #greetingSelectModal[style*="display: flex"],
     #chatNameModal[style*="display: flex"],
-    #newCharacterModal[style*="display: flex"] {
+    #newCharacterModal[style*="display: flex"],
+    #renameChatModal[style*="display: flex"] {
       opacity: 1;
     }
     .settings-content {
@@ -2076,7 +2078,35 @@
         font-size: 0.9rem;
       }
     }
-
+    
+    #renameChatModal .settings-content { 
+      max-width: 500px; 
+      width: 90vw;
+      padding: 1.5rem;
+    }
+    @media (max-width: 480px) {
+      #renameChatModal .settings-content {
+        padding: 1rem;
+        max-width: 95vw;
+      }
+      #renameChatModal .settings-content h2 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+      #renameChatModal .settings-content p {
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+      }
+      #renameChatModal .settings-content input {
+        font-size: 1rem;
+        padding: 0.7rem;
+      }
+      #renameChatModal .settings-content button {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+    
     @keyframes slideDownFadeIn {
       from { opacity: 0; transform: translateY(-15px); }
       to { opacity: 1; transform: translateY(0); }
@@ -3005,7 +3035,7 @@
     .chat-dropdown-item-actions {
       display: flex;
       gap: 4px;
-      opacity: 0;
+      opacity: 1;
       transition: opacity var(--transition-fast);
     }
     .chat-dropdown-item:hover .chat-dropdown-item-actions {
@@ -3242,7 +3272,7 @@
       border-color: var(--accent-color);
     }
 
-    #settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal, #chatNameModal, #newCharacterModal {
+    #settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal, #chatNameModal, #newCharacterModal, #renameChatModal {
       display: none;
       position: fixed;
       top: 0;
@@ -3263,7 +3293,8 @@
     #backgroundModal.above-hamburger,
     #greetingSelectModal.above-hamburger,
     #chatNameModal.above-hamburger,
-    #newCharacterModal.above-hamburger {
+    #newCharacterModal.above-hamburger,
+    #renameChatModal.above-hamburger {
         z-index: 1010;
     }
 
@@ -3272,7 +3303,8 @@
     #backgroundModal[style*="display: flex"],
     #greetingSelectModal[style*="display: flex"],
     #chatNameModal[style*="display: flex"],
-    #newCharacterModal[style*="display: flex"] {
+    #newCharacterModal[style*="display: flex"],
+    #renameChatModal[style*="display: flex"] {
       opacity: 1;
     }
     .settings-content, .greeting-select-content {
@@ -4317,7 +4349,35 @@
         font-size: 0.9rem;
       }
     }
-
+    
+    #renameChatModal .settings-content { 
+      max-width: 500px; 
+      width: 90vw;
+      padding: 1.5rem;
+    }
+    @media (max-width: 480px) {
+      #renameChatModal .settings-content {
+        padding: 1rem;
+        max-width: 95vw;
+      }
+      #renameChatModal .settings-content h2 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+      #renameChatModal .settings-content p {
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+      }
+      #renameChatModal .settings-content input {
+        font-size: 1rem;
+        padding: 0.7rem;
+      }
+      #renameChatModal .settings-content button {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+    
     @keyframes slideDownFadeIn {
       from { opacity: 0; transform: translateY(-15px); }
       to { opacity: 1; transform: translateY(0); }
@@ -4693,7 +4753,7 @@
 
 <style>
 /* Animation guard for modal overlays */
-#settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal, #clearChatConfirmModal, #chatNameModal, #newCharacterModal {
+#settingsModal, #lorebookModal, #backgroundModal, #greetingSelectModal, #clearChatConfirmModal, #chatNameModal, #newCharacterModal, #renameChatModal {
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -4705,7 +4765,7 @@
   padding: 1rem;
   box-sizing: border-box;
 }
-#settingsModal.modal-show, #lorebookModal.modal-show, #backgroundModal.modal-show, #greetingSelectModal.modal-show, #clearChatConfirmModal.modal-show, #chatNameModal.modal-show, #newCharacterModal.modal-show {
+#settingsModal.modal-show, #lorebookModal.modal-show, #backgroundModal.modal-show, #greetingSelectModal.modal-show, #clearChatConfirmModal.modal-show, #chatNameModal.modal-show, #newCharacterModal.modal-show, #renameChatModal.modal-show {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -5128,6 +5188,19 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; } */
 </div>
 </div>
 </div>
+<!-- Rename Chat Modal -->
+<div id="renameChatModal">
+<div class="settings-content">
+<button aria-label="Закрыть" class="close-btn" onclick="closeRenameChatModal()" title="Закрыть">×</button>
+<h2>✏️ Переименовать чат</h2>
+<p style="font-size: 0.9rem; color: var(--text-color); opacity: 0.8; margin-bottom: 1rem;">Введите новое название чата:</p>
+<input aria-label="Название чата" id="renameChatInput" placeholder="Введите название чата" type="text" style="margin-bottom: 1rem;" onkeydown="if(event.key==='Enter') confirmRenameChat()"/>
+<div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+<button onclick="closeRenameChatModal()" type="button" style="background: #ffcdd2; color:#5f2120;">Отмена</button>
+<button onclick="confirmRenameChat()" type="button">Переименовать</button>
+</div>
+</div>
+</div>
 <input accept="image/*,application/*,text/*,*/*" id="fileInput" multiple="" style="display:none;" type="file"/>
 <script>
     // --- Global Variables and Constants ---
@@ -5262,6 +5335,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; } */
             const settingsZIndex = parseInt(window.getComputedStyle(settingsModal).zIndex, 10) || 1000;
             modal.style.zIndex = settingsZIndex + 10;
             modal.classList.add('above-hamburger');
+        } else if (typeof isMobileView === 'function' && isMobileView() && typeof mobileMenuContainer !== 'undefined' && mobileMenuContainer && mobileMenuContainer.classList.contains('open')) {
+            modal.classList.add('above-hamburger');
         } else {
             modal.style.zIndex = '';
         }
@@ -5348,6 +5423,98 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; } */
         if (nameInput) {
             setTimeout(() => nameInput.focus(), 100);
         }
+    };
+    
+    // Rename Chat Modal Functions
+    let currentRenameChatCharacter = null;
+    let currentRenameChatId = null;
+    
+    window.openRenameChatModal = function(characterName, chatId) {
+        const chats = getCharacterChats(characterName);
+        const chat = chats.find(c => c.id === chatId);
+        if (!chat) return;
+        
+        currentRenameChatCharacter = characterName;
+        currentRenameChatId = chatId;
+        
+        const input = document.getElementById("renameChatInput");
+        const modal = document.getElementById("renameChatModal");
+        if (!input || !modal) {
+            console.error("Rename chat modal elements not found");
+            return;
+        }
+        input.value = chat.name;
+        input.select();
+        modal.classList.add('modal-show');
+        const settingsModal = document.getElementById("settingsModal");
+        if (settingsModal && settingsModal.classList.contains('modal-show')) {
+            const settingsZIndex = parseInt(window.getComputedStyle(settingsModal).zIndex, 10) || 1000;
+            modal.style.zIndex = settingsZIndex + 10;
+            modal.classList.add('above-hamburger');
+        } else if (typeof isMobileView === 'function' && isMobileView() && typeof mobileMenuContainer !== 'undefined' && mobileMenuContainer && mobileMenuContainer.classList.contains('open')) {
+            modal.classList.add('above-hamburger');
+        } else {
+            modal.style.zIndex = '';
+        }
+        // Focus on input after modal opens
+        setTimeout(() => input.focus(), 100);
+    };
+    
+    window.closeRenameChatModal = function() {
+        const modal = document.getElementById("renameChatModal");
+        if (modal) {
+            modal.classList.remove('modal-show');
+            modal.classList.remove('above-hamburger');
+            modal.style.zIndex = '';
+        }
+        const input = document.getElementById("renameChatInput");
+        if (input) input.value = '';
+        currentRenameChatCharacter = null;
+        currentRenameChatId = null;
+    };
+    
+    window.confirmRenameChat = function() {
+        const input = document.getElementById("renameChatInput");
+        if (!input) return;
+        const newName = input.value.trim();
+        if (!newName) {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert("Пожалуйста, введите название чата.");
+            } else {
+                alert("Пожалуйста, введите название чата.");
+            }
+            return;
+        }
+        if (!currentRenameChatCharacter || !currentRenameChatId) {
+            closeRenameChatModal();
+            return;
+        }
+        
+        const chats = getCharacterChats(currentRenameChatCharacter);
+        const chat = chats.find(c => c.id === currentRenameChatId);
+        if (!chat) {
+            closeRenameChatModal();
+            return;
+        }
+        
+        if (newName === chat.name) {
+            closeRenameChatModal();
+            return;
+        }
+        
+        if (typeof renameChat === 'function') {
+            if (renameChat(currentRenameChatCharacter, currentRenameChatId, newName)) {
+                renderChatList(document.getElementById('chatList'));
+                const hamburgerChatList = document.getElementById('mobileMenuChatListInternal');
+                if (hamburgerChatList) renderChatList(hamburgerChatList);
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert(`Чат переименован в "${newName}".`);
+                } else {
+                    alert(`Чат переименован в "${newName}".`);
+                }
+            }
+        }
+        closeRenameChatModal();
     };
     let regenerateVariants = [];
     let currentVariantIndex = -1;
@@ -7193,16 +7360,21 @@ function setupMobileHamburgerMenu() {{
     // createNewChatPrompt is defined globally at the top of the script
     
     function renameChatPrompt(characterName, chatId) {
-      const chats = getCharacterChats(characterName);
-      const chat = chats.find(c => c.id === chatId);
-      if (!chat) return;
-      const newName = prompt(`Введите новое название чата:`, chat.name);
-      if (newName && newName.trim() && newName.trim() !== chat.name) {
-        if (renameChat(characterName, chatId, newName.trim())) {
-          renderChatList(document.getElementById('chatList'));
-          const hamburgerChatList = document.getElementById('mobileMenuChatListInternal');
-          if (hamburgerChatList) renderChatList(hamburgerChatList);
-          showCustomAlert(`Чат переименован в "${newName.trim()}".`);
+      if (typeof openRenameChatModal === 'function') {
+        openRenameChatModal(characterName, chatId);
+      } else {
+        // Fallback to prompt if modal function is not available
+        const chats = getCharacterChats(characterName);
+        const chat = chats.find(c => c.id === chatId);
+        if (!chat) return;
+        const newName = prompt(`Введите новое название чата:`, chat.name);
+        if (newName && newName.trim() && newName.trim() !== chat.name) {
+          if (renameChat(characterName, chatId, newName.trim())) {
+            renderChatList(document.getElementById('chatList'));
+            const hamburgerChatList = document.getElementById('mobileMenuChatListInternal');
+            if (hamburgerChatList) renderChatList(hamburgerChatList);
+            showCustomAlert(`Чат переименован в "${newName.trim()}".`);
+          }
         }
       }
     }
