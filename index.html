@@ -8053,6 +8053,73 @@ function setupMobileHamburgerMenu() {{
 
         const systemPromptText = getSystemContent(charDataForApi, allMessages[editedUserMessageIndex].content);
 
+        // Проверяем REST API - проверяем чекбокс и URL напрямую для актуальных значений
+        const enableRestApiCheckbox = document.getElementById("enableRestApi");
+        const restApiUrlInput = document.getElementById("restApiUrl");
+        const isRestApiEnabled = enableRestApiCheckbox?.checked || useRestApi;
+        const restApiUrl = restApiUrlInput?.value?.trim() || restApiUrlValue;
+        
+        if (isRestApiEnabled && restApiUrl) {
+            // Редактирование через REST API
+            const userMessageContent = allMessages[editedUserMessageIndex].content;
+            const userAttachments = allMessages[editedUserMessageIndex].attachments || null;
+            
+            // Находим индекс следующего сообщения ассистента для обновления
+            let nextAssistantIndex = -1;
+            for (let i = editedUserMessageIndex + 1; i < allMessages.length; i++) {
+                if (allMessages[i].role === 'assistant' || (currentMode === 'group' && allMessages[i].sender !== 'Вы')) {
+                    nextAssistantIndex = i;
+                    break;
+                }
+            }
+            
+            // Если есть следующее сообщение ассистента, удаляем его и все последующие
+            if (nextAssistantIndex >= 0) {
+                // Удаляем сообщения из DOM (удаляем в обратном порядке)
+                for (let i = allMessages.length - 1; i >= nextAssistantIndex; i--) {
+                    removeMessageFromDOM(i);
+                }
+                allMessages.splice(nextAssistantIndex);
+            }
+            
+            // Добавляем placeholder сообщение для обновления
+            const apiPlaceholderAvatar = charDataForApi?.avatarCharacter || "https://placehold.co/80x80/80D0C0/FFFFFF?text=A";
+            const placeholderMsgData = {
+                sender: characterNameToRespond || "API", 
+                content: "Отправка запроса на REST API...", 
+                role: "assistant", 
+                avatar: apiPlaceholderAvatar
+            };
+            if (currentMode === "group" && characterNameToRespond) {
+                placeholderMsgData.sender = characterNameToRespond;
+            }
+            const targetIndex = nextAssistantIndex >= 0 ? nextAssistantIndex : allMessages.length;
+            // Вставляем placeholder в массив по индексу
+            allMessages.splice(targetIndex, 0, placeholderMsgData);
+            // Вставляем placeholder в DOM в правильное место
+            const container = createMessageContainerDOM(placeholderMsgData, targetIndex);
+            const nextContainer = messagesBox.querySelector(`.message-container[data-index="${targetIndex}"]`);
+            if (nextContainer) {
+                messagesBox.insertBefore(container, nextContainer);
+            } else {
+                messagesBox.appendChild(container);
+            }
+            // Обновляем индексы всех сообщений после вставленного
+            const messageContainers = messagesBox.querySelectorAll('.message-container');
+            messageContainers.forEach((cont, idx) => {
+                cont.dataset.index = idx;
+            });
+            requestAnimationFrame(() => {
+                container.style.opacity = 1;
+                container.style.transform = 'translateY(0)';
+            });
+            renderedEndIndex = Math.max(renderedEndIndex, targetIndex);
+            
+            // Используем historyUpToEdited как customHistory и передаем индекс для обновления
+            await sendToRestApi(userMessageContent, userAttachments, charDataForApi, systemPromptText, temperature, max_tokens, characterNameToRespond, historyUpToEdited, targetIndex);
+            return;
+        }
+
         if (useGoogleApi && googleApiKey && googleApiModel) {
             let geminiContents = [];
             historyUpToEdited.forEach(m => {
@@ -8235,6 +8302,80 @@ function setupMobileHamburgerMenu() {{
         try {
             let reply;
             const systemPromptText = getSystemContent(charData, userMessageContentForSystem);
+
+            // Проверяем REST API - проверяем чекбокс и URL напрямую для актуальных значений
+            const enableRestApiCheckbox = document.getElementById("enableRestApi");
+            const restApiUrlInput = document.getElementById("restApiUrl");
+            const isRestApiEnabled = enableRestApiCheckbox?.checked || useRestApi;
+            const restApiUrl = restApiUrlInput?.value?.trim() || restApiUrlValue;
+            
+            if (isRestApiEnabled && restApiUrl) {
+                // Регенерация через REST API
+                const temperature = parseFloat(document.getElementById("temperature").value) || 0.7;
+                const max_tokens = parseInt(document.getElementById("maxTokens").value) || 1024;
+                
+                // Получаем последнее сообщение пользователя для контекста
+                const userMessageContent = allMessages[userMsgIndex].content;
+                const userAttachments = allMessages[userMsgIndex].attachments || null;
+                
+                // Удаляем старое сообщение ассистента и все последующие из массива
+                // НЕ вызываем loadAndRenderMessages, чтобы не перерисовывать весь чат
+                if (allMessages.length > index) {
+                    // Удаляем сообщения из DOM начиная с индекса (удаляем в обратном порядке)
+                    for (let i = allMessages.length - 1; i >= index; i--) {
+                        removeMessageFromDOM(i);
+                    }
+                    allMessages.splice(index);
+                }
+                
+                // Добавляем placeholder сообщение для обновления
+                const apiPlaceholderAvatar = charData?.avatarCharacter || "https://placehold.co/80x80/80D0C0/FFFFFF?text=A";
+                const placeholderMsgData = {
+                    sender: characterForResponse || "API", 
+                    content: "Отправка запроса на REST API...", 
+                    role: "assistant", 
+                    avatar: apiPlaceholderAvatar
+                };
+                if (currentMode === "group" && characterForResponse) {
+                    placeholderMsgData.sender = characterForResponse;
+                }
+                // Вставляем placeholder в массив по индексу
+                allMessages.splice(index, 0, placeholderMsgData);
+                // Вставляем placeholder в DOM в правильное место
+                const container = createMessageContainerDOM(placeholderMsgData, index);
+                const nextContainer = messagesBox.querySelector(`.message-container[data-index="${index}"]`);
+                if (nextContainer) {
+                    messagesBox.insertBefore(container, nextContainer);
+                } else {
+                    messagesBox.appendChild(container);
+                }
+                // Обновляем индексы всех сообщений после вставленного
+                const messageContainers = messagesBox.querySelectorAll('.message-container');
+                messageContainers.forEach((cont, idx) => {
+                    cont.dataset.index = idx;
+                });
+                requestAnimationFrame(() => {
+                    container.style.opacity = 1;
+                    container.style.transform = 'translateY(0)';
+                });
+                renderedEndIndex = Math.max(renderedEndIndex, index);
+                
+                // Используем historyForAPI как customHistory и передаем индекс для обновления
+                // historyForAPI уже содержит все сообщения до индекса (до удаленного сообщения ассистента)
+                await sendToRestApi(userMessageContent, userAttachments, charData, systemPromptText, temperature, max_tokens, characterForResponse, historyForAPI, index);
+                
+                // Обновляем варианты регенерации
+                if (regenerateVariants.length === 0 || currentVariantIndex === -1) {
+                    regenerateVariants = [JSON.parse(JSON.stringify(allMessages))];
+                    currentVariantIndex = 0;
+                } else {
+                    const newVariantChatState = JSON.parse(JSON.stringify(allMessages));
+                    regenerateVariants.push(newVariantChatState);
+                    currentVariantIndex = regenerateVariants.length - 1;
+                }
+                
+                return;
+            }
 
             // Ensure we have the latest values for Vercel proxy settings
             const currentUseVercelProxy = document.getElementById("enableVercelProxy")?.checked || useVercelProxy;
@@ -8660,11 +8801,14 @@ function setupMobileHamburgerMenu() {{
     }
 
 
-    async function sendToRestApi(userMessageContent, attachmentsArray = null, charDataForApi = null, systemPromptText = "", temperature = 0.7, max_tokens = 1024, charToRespondName = null) {
+    async function sendToRestApi(userMessageContent, attachmentsArray = null, charDataForApi = null, systemPromptText = "", temperature = 0.7, max_tokens = 1024, charToRespondName = null, customHistory = null, targetIndex = -1) {
         if (!restApiUrlValue) {
             appendNewMessageToDOM({sender:"Система", content:"URL REST API не настроен.", role:"system", avatar:"https://placehold.co/80x80/CCCCCC/FFFFFF?text=S"}, allMessages.length);
             return;
         }
+        
+        // Используем переданную историю или allMessages
+        const messagesToUse = customHistory !== null ? customHistory : allMessages;
         
         // Проверяем наличие заголовков авторизации
         const hasAuth = restApiHeadersValue && (
@@ -8685,8 +8829,12 @@ function setupMobileHamburgerMenu() {{
         if (currentMode === "group" && charToRespondName) {
             placeholderMsgData.sender = charToRespondName;
         }
-        allMessages.push(placeholderMsgData);
-        appendNewMessageToDOM(placeholderMsgData, allMessages.length -1);
+        
+        // Если используется customHistory, не добавляем placeholder в allMessages
+        if (customHistory === null) {
+            allMessages.push(placeholderMsgData);
+            appendNewMessageToDOM(placeholderMsgData, allMessages.length -1);
+        }
 
         try {
             let requestBody = {};
@@ -8705,8 +8853,8 @@ function setupMobileHamburgerMenu() {{
                     messagesForAPI.push({ role: "system", content: systemPromptText });
                 }
                 
-                // Convert allMessages to OpenAI format
-                allMessages.forEach(m => {
+                // Convert messagesToUse to OpenAI format
+                messagesToUse.forEach(m => {
                     if (m.role === "system" && m.sender === "Система") return; // Skip system messages
                     if (m.content === "Отправка запроса на REST API...") return; // Skip placeholder
                     
@@ -8742,8 +8890,8 @@ function setupMobileHamburgerMenu() {{
                 // Anthropic Claude format
                 let messagesForAPI = [];
                 
-                // Convert allMessages to Anthropic format
-                allMessages.forEach(m => {
+                // Convert messagesToUse to Anthropic format
+                messagesToUse.forEach(m => {
                     if (m.role === "system" && m.sender === "Система") return;
                     if (m.content === "Отправка запроса на REST API...") return;
                     
@@ -8822,10 +8970,14 @@ function setupMobileHamburgerMenu() {{
 
             const response = await fetch(requestUrl, fetchOptions);
 
-            const placeholderIndex = allMessages.findIndex(m => m.content === "Отправка запроса на REST API..." && (m.sender === "API" || m.sender === charToRespondName));
-            if (placeholderIndex > -1) {
-                allMessages.splice(placeholderIndex, 1);
-                removeMessageFromDOM(placeholderIndex);
+            // Находим индекс placeholder сообщения для обновления вместо удаления
+            let placeholderIndex = -1;
+            if (customHistory === null) {
+                // Обычный режим - ищем placeholder в allMessages
+                placeholderIndex = allMessages.findIndex(m => m.content === "Отправка запроса на REST API..." && (m.sender === "API" || m.sender === charToRespondName));
+            } else {
+                // При регенерации/редактировании используем переданный targetIndex
+                placeholderIndex = targetIndex >= 0 ? targetIndex : customHistory.length;
             }
 
             let responseData;
@@ -8845,7 +8997,7 @@ function setupMobileHamburgerMenu() {{
                         let messagesForAPI = [];
                         messagesForAPI.push({ role: "user", content: systemPromptText });
                         
-                        allMessages.forEach(m => {
+                        messagesToUse.forEach(m => {
                             if (m.role === "system" && m.sender === "Система") return;
                             if (m.content === "Отправка запроса на REST API...") return;
                             
@@ -9016,8 +9168,29 @@ function setupMobileHamburgerMenu() {{
             if (currentMode === "group" && charToRespondName) {
                 apiReplyMsgData.sender = charToRespondName;
             }
-            allMessages.push(apiReplyMsgData);
-            appendNewMessageToDOM(apiReplyMsgData, allMessages.length - 1);
+            
+            // Обновляем placeholder сообщение вместо создания нового
+            if (customHistory === null) {
+                // Обычный режим - обновляем или добавляем в allMessages
+                if (placeholderIndex > -1) {
+                    allMessages[placeholderIndex] = apiReplyMsgData;
+                    updateMessageInDOM(placeholderIndex, apiReplyMsgData);
+                } else {
+                    allMessages.push(apiReplyMsgData);
+                    appendNewMessageToDOM(apiReplyMsgData, allMessages.length - 1);
+                }
+            } else {
+                // Режим регенерации/редактирования - обновляем существующее сообщение по индексу
+                if (targetIndex >= 0 && targetIndex < allMessages.length) {
+                    // Обновляем существующее сообщение
+                    allMessages[targetIndex] = apiReplyMsgData;
+                    updateMessageInDOM(targetIndex, apiReplyMsgData);
+                } else {
+                    // Если индекс не указан или невалиден, добавляем новое
+                    allMessages.push(apiReplyMsgData);
+                    appendNewMessageToDOM(apiReplyMsgData, allMessages.length - 1);
+                }
+            }
 
             // Save chat
             if (currentMode === "personal" && charToRespondName) {
@@ -9028,14 +9201,23 @@ function setupMobileHamburgerMenu() {{
 
         } catch (error) {
             console.error("REST API Ошибка:", error);
-            const placeholderIndexOnError = allMessages.findIndex(m => m.content === "Отправка запроса на REST API..." && (m.sender === "API" || m.sender === charToRespondName));
-            if (placeholderIndexOnError > -1) {
-                allMessages.splice(placeholderIndexOnError, 1);
-                removeMessageFromDOM(placeholderIndexOnError);
-            }
             const errorMsgData = {sender:"Система", content:`Ошибка REST API: ${error.message}`, role:"system", avatar:"https://placehold.co/80x80/CCCCCC/FFFFFF?text=S"};
-            allMessages.push(errorMsgData);
-            appendNewMessageToDOM(errorMsgData, allMessages.length - 1);
+            
+            // Обновляем placeholder сообщение на сообщение об ошибке
+            if (customHistory === null) {
+                const placeholderIndexOnError = allMessages.findIndex(m => m.content === "Отправка запроса на REST API..." && (m.sender === "API" || m.sender === charToRespondName));
+                if (placeholderIndexOnError > -1) {
+                    allMessages[placeholderIndexOnError] = errorMsgData;
+                    updateMessageInDOM(placeholderIndexOnError, errorMsgData);
+                } else {
+                    allMessages.push(errorMsgData);
+                    appendNewMessageToDOM(errorMsgData, allMessages.length - 1);
+                }
+            } else {
+                // При регенерации просто добавляем сообщение об ошибке
+                allMessages.push(errorMsgData);
+                appendNewMessageToDOM(errorMsgData, allMessages.length - 1);
+            }
 
         } finally {
             setStatusActive(false);
