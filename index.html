@@ -8312,6 +8312,11 @@ function setupMobileHamburgerMenu() {{
             return showCustomAlert("Сообщение не может быть пустым, если нет вложений.");
         }
         updateMessageContent(index, newText);
+        // Восстанавливаем отображение исходного содержимого и кнопок без перерисовки контейнера
+        messageContentWrapper.style.display = "flex";
+        if (messageButtons) messageButtons.style.display = "flex";
+        if (container.contains(editArea)) container.removeChild(editArea);
+        if (container.contains(btnContainer)) container.removeChild(btnContainer);
 
         if (allMessages[index].role === 'user' || allMessages[index].sender === 'Вы') {
             const charToRespondName = currentMode === 'personal' ? getCurrentCharacterName() : getLastBotSender(index);
@@ -8347,10 +8352,21 @@ function setupMobileHamburgerMenu() {{
         const max_tokens = parseInt(document.getElementById("maxTokens").value) || 1024;
 
         if (allMessages.length > editedUserMessageIndex + 1) {
+            // Удаляем только последующие сообщения из DOM, без полной перерисовки
+            for (let i = allMessages.length - 1; i >= editedUserMessageIndex + 1; i--) {
+                removeMessageFromDOM(i);
+            }
             allMessages.splice(editedUserMessageIndex + 1);
-             if (currentMode === "personal") saveChat(getCurrentCharacterName(), allMessages);
-             else saveRoomChat(allMessages);
-            loadAndRenderMessages(editedUserMessageIndex);
+            if (currentMode === "personal") {
+                saveChat(getCurrentCharacterName(), allMessages);
+            } else {
+                saveRoomChat(allMessages);
+            }
+            // Нормализуем индексы контейнеров после удаления
+            const messageContainers = messagesBox.querySelectorAll('.message-container');
+            messageContainers.forEach((cont, idx) => {
+                cont.dataset.index = idx;
+            });
         }
 
         const systemPromptText = getSystemContent(charDataForApi, allMessages[editedUserMessageIndex].content);
@@ -8525,7 +8541,11 @@ function setupMobileHamburgerMenu() {{
       } else {
         saveRoomChat(allMessages);
       }
-      updateMessageInDOM(index, msgToUpdate);
+      // Обновляем содержимое сообщения без замены контейнера, чтобы не было мигания
+      const updatedInPlace = refreshMessageContent(index, msgToUpdate);
+      if (!updatedInPlace) {
+        updateMessageInDOM(index, msgToUpdate);
+      }
     }
 
     function deleteMessage(index) {
