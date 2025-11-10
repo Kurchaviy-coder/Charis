@@ -9190,22 +9190,14 @@ function setupMobileHamburgerMenu() {{
             return;
         }
         
+        // Кешируем значения из DOM один раз в начале для оптимизации
+        const restApiModelSelect = document.getElementById("restApiModel");
+        const modelSelect = document.getElementById("model");
+        const headersTextarea = document.getElementById("restApiHeaders");
+        
         // Используем переданную историю или allMessages
         const messagesToUse = customHistory !== null ? customHistory : allMessages;
         
-        // Проверяем наличие заголовков авторизации
-        const hasAuth = restApiHeadersValue && (
-            restApiHeadersValue["Authorization"] || 
-            restApiHeadersValue["authorization"] || 
-            restApiHeadersValue["x-api-key"] || 
-            restApiHeadersValue["X-API-Key"] ||
-            restApiHeadersValue["api-key"] ||
-            restApiHeadersValue["Api-Key"]
-        );
-        
-        if (!hasAuth) {
-            console.warn("REST API: Заголовки авторизации не найдены. Убедитесь, что вы добавили API ключ в настройках REST API.");
-        }
         setStatusActive(true);
         const apiPlaceholderAvatar = charDataForApi?.avatarCharacter || "https://placehold.co/80x80/80D0C0/FFFFFF?text=A";
         const placeholderMsgData = {sender: charToRespondName || "API", content:"Отправка запроса на REST API...", role:"assistant", avatar: apiPlaceholderAvatar, attachments: attachmentsArray, _noAnimate: true};
@@ -9221,77 +9213,93 @@ function setupMobileHamburgerMenu() {{
 
         try {
             let requestBody = {};
-            let requestUrl = restApiUrlValue;
-
-            // Build request body based on format
-            // Флаг для отслеживания, нужно ли использовать system prompt
-            let useSystemPrompt = true;
+            const requestUrl = restApiUrlValue;
             
+            // Оптимизированное формирование заголовков (кешируем парсинг)
+            let currentHeaders = restApiHeadersValue || {};
+            if (headersTextarea && headersTextarea.value.trim()) {
+                try {
+                    currentHeaders = JSON.parse(headersTextarea.value.trim());
+                } catch (e) {
+                    console.error("Ошибка парсинга заголовков REST API:", e);
+                }
+            }
+            
+            const headers = { ...currentHeaders };
+            if (!headers["Content-Type"] && !headers["content-type"]) {
+                headers["Content-Type"] = "application/json";
+            }
+
+            // Оптимизированное формирование массива сообщений
             if (restApiFormat === "openai") {
                 // OpenAI-compatible format
-                let messagesForAPI = [];
-                // System prompt добавляем только если он есть
-                // Если модель не поддерживает system, он будет отправлен как первое user сообщение при ошибке
-                if (systemPromptText && useSystemPrompt) {
+                const messagesForAPI = [];
+                if (systemPromptText) {
                     messagesForAPI.push({ role: "system", content: systemPromptText });
                 }
                 
-                // Convert messagesToUse to OpenAI format
-                messagesToUse.forEach(m => {
-                    if (m.role === "system" && m.sender === "Система") return; // Skip system messages
-                    if (m.content === "Отправка запроса на REST API...") return; // Skip placeholder
+                // Оптимизированная конвертация - используем for вместо forEach для лучшей производительности
+                for (let i = 0; i < messagesToUse.length; i++) {
+                    const m = messagesToUse[i];
+                    if (m.role === "system" && m.sender === "Система") continue;
+                    if (m.content === "Отправка запроса на REST API...") continue;
                     
-                    let apiMsgContentArray = [];
-                    if (m.content) apiMsgContentArray.push({ type: "text", text: m.content });
-                    if (m.attachments && m.attachments.some(att => att.type.startsWith('image/') && att.src.startsWith('data:image'))) {
-                        m.attachments.filter(att => att.type.startsWith('image/') && att.src.startsWith('data:image')).forEach(att => {
-                            apiMsgContentArray.push({ type: "image_url", image_url: { url: att.src } });
-                        });
-                    } else if (m.attachments) {
-                        apiMsgContentArray.push({ type: "text", text: `[Прикреплено ${m.attachments.length} файлов]` });
+                    const isUser = (m.sender === "Вы" || m.role === "user");
+                    const role = isUser ? "user" : "assistant";
+                    
+                    // Оптимизированная обработка контента
+                    let content;
+                    if (m.attachments && m.attachments.length > 0) {
+                        const imageAtts = m.attachments.filter(att => att.type && att.type.startsWith('image/') && att.src && att.src.startsWith('data:image'));
+                        if (imageAtts.length > 0) {
+                            const apiMsgContentArray = [{ type: "text", text: m.content || "" }];
+                            for (let j = 0; j < imageAtts.length; j++) {
+                                apiMsgContentArray.push({ type: "image_url", image_url: { url: imageAtts[j].src } });
+                            }
+                            content = apiMsgContentArray;
+                        } else {
+                            content = m.content || `[Прикреплено ${m.attachments.length} файлов]`;
+                        }
+                    } else {
+                        content = m.content || "";
                     }
-
-                    const finalContent = apiMsgContentArray.length === 1 && apiMsgContentArray[0].type === "text" ? apiMsgContentArray[0].text : apiMsgContentArray;
-                    const role = (m.sender === "Вы" || m.role === "user") ? "user" : "assistant";
-                    const content = (m.sender !== "Вы" && m.role !== "user" && m.sender && currentMode === 'group') ? `${m.sender}: ${finalContent}` : finalContent;
                     
-                    messagesForAPI.push({ role, content });
-                });
-
-                // Используем выбранную модель из селекта, если есть, иначе из персонажа
-                // Проверяем селект напрямую, так как restApiModel может быть не обновлен
-                const restApiModelSelect = document.getElementById("restApiModel");
-                const selectedModelFromSelect = restApiModelSelect?.value?.trim() || restApiModel?.trim() || "";
-                const selectedModel = selectedModelFromSelect || charDataForApi?.model || document.getElementById("model")?.value || "gpt-3.5-turbo";
-                requestBody = {
-                    model: selectedModel,
-                    messages: messagesForAPI,
-                    temperature: temperature,
-                    max_tokens: max_tokens
-                };
-            } else if (restApiFormat === "anthropic") {
-                // Anthropic Claude format
-                let messagesForAPI = [];
-                
-                // Convert messagesToUse to Anthropic format
-                messagesToUse.forEach(m => {
-                    if (m.role === "system" && m.sender === "Система") return;
-                    if (m.content === "Отправка запроса на REST API...") return;
-                    
-                    const role = (m.sender === "Вы" || m.role === "user") ? "user" : "assistant";
-                    let content = m.content;
-                    if (m.sender !== "Вы" && m.role !== "user" && m.sender && currentMode === 'group') {
+                    if (currentMode === 'group' && !isUser && m.sender) {
                         content = `${m.sender}: ${content}`;
                     }
                     
                     messagesForAPI.push({ role, content });
-                });
+                }
 
-                // Используем выбранную модель из селекта, если есть, иначе из персонажа
-                // Проверяем селект напрямую, так как restApiModel может быть не обновлен
-                const restApiModelSelect = document.getElementById("restApiModel");
-                const selectedModelFromSelect = restApiModelSelect?.value?.trim() || restApiModel?.trim() || "";
-                const selectedModel = selectedModelFromSelect || charDataForApi?.model || "claude-3-5-sonnet-20241022";
+                const selectedModel = (restApiModelSelect?.value?.trim() || restApiModel?.trim() || charDataForApi?.model || modelSelect?.value || "gpt-3.5-turbo");
+                requestBody = {
+                    model: selectedModel,
+                    messages: messagesForAPI,
+                    temperature: temperature,
+                    max_tokens: max_tokens,
+                    stream: true
+                };
+            } else if (restApiFormat === "anthropic") {
+                // Anthropic Claude format
+                const messagesForAPI = [];
+                
+                for (let i = 0; i < messagesToUse.length; i++) {
+                    const m = messagesToUse[i];
+                    if (m.role === "system" && m.sender === "Система") continue;
+                    if (m.content === "Отправка запроса на REST API...") continue;
+                    
+                    const isUser = (m.sender === "Вы" || m.role === "user");
+                    const role = isUser ? "user" : "assistant";
+                    let content = m.content || "";
+                    
+                    if (currentMode === 'group' && !isUser && m.sender) {
+                        content = `${m.sender}: ${content}`;
+                    }
+                    
+                    messagesForAPI.push({ role, content });
+                }
+
+                const selectedModel = (restApiModelSelect?.value?.trim() || restApiModel?.trim() || charDataForApi?.model || "claude-3-5-sonnet-20241022");
                 requestBody = {
                     model: selectedModel,
                     max_tokens: max_tokens,
@@ -9314,56 +9322,43 @@ function setupMobileHamburgerMenu() {{
                 }
             }
 
-            // Build headers - правильно объединяем заголовки
-            // Проверяем textarea напрямую, чтобы получить актуальные заголовки
-            const headersTextarea = document.getElementById("restApiHeaders");
-            let currentHeaders = {};
-            if (headersTextarea && headersTextarea.value.trim()) {
-                try {
-                    currentHeaders = JSON.parse(headersTextarea.value.trim());
-                } catch (e) {
-                    console.error("Ошибка парсинга заголовков REST API:", e);
-                    currentHeaders = restApiHeadersValue || {};
-                }
-            } else {
-                currentHeaders = restApiHeadersValue || {};
-            }
-            
-            const headers = {};
-            // Копируем все заголовки
-            if (currentHeaders && typeof currentHeaders === 'object') {
-                Object.assign(headers, currentHeaders);
-            }
-            // Добавляем Content-Type если его нет
-            if (!headers["Content-Type"] && !headers["content-type"]) {
-                headers["Content-Type"] = "application/json";
-            }
-            
-            // Логируем для отладки (только ключи, без значений)
-            if (console && console.debug) {
-                console.debug("REST API Headers keys:", Object.keys(headers));
-            }
-
-            const fetchOptions = {
+            // Отправляем запрос сразу после формирования
+            const response = await fetch(requestUrl, {
                 method: restApiMethod,
                 headers: headers,
                 body: JSON.stringify(requestBody)
-            };
-            
+            });
 
-            const response = await fetch(requestUrl, fetchOptions);
-
-            // Находим индекс placeholder сообщения для обновления вместо удаления
+            // Оптимизированный поиск индекса placeholder - используем уже известный индекс
             let placeholderIndex = -1;
             if (customHistory === null) {
-                // Обычный режим - ищем placeholder в allMessages
-                placeholderIndex = allMessages.findIndex(m => m.content === "Отправка запроса на REST API..." && (m.sender === "API" || m.sender === charToRespondName));
+                // Обычный режим - placeholder только что добавлен, его индекс = длина массива - 1
+                placeholderIndex = allMessages.length - 1;
             } else {
                 // При регенерации/редактировании используем переданный targetIndex
                 placeholderIndex = targetIndex >= 0 ? targetIndex : customHistory.length;
             }
 
+            // Получаем DOM элементы для streaming обновления
+            const streamingMessageContainer = messagesBox.querySelector(`.message-container[data-index="${placeholderIndex}"]`);
+            const streamingMessageDiv = streamingMessageContainer?.querySelector(".message");
+            const displayName = currentMode === "group" ? (charToRespondName || "API") : (charToRespondName || "API");
+
             let responseData;
+            let apiReplyText = "";
+            let imageAttachments = [];
+            let isStreaming = false;
+            
+            // Проверяем, поддерживает ли API streaming (для формата OpenAI)
+            // Пробуем streaming если включен stream: true в запросе
+            if (restApiFormat === "openai" && requestBody.stream === true && response.ok) {
+                const contentType = response.headers.get("content-type") || "";
+                // Проверяем Content-Type или пробуем streaming для всех успешных ответов с stream: true
+                isStreaming = contentType.includes("text/event-stream") || 
+                             contentType.includes("text/plain") || 
+                             contentType === "" ||  // Некоторые API не возвращают Content-Type
+                             !contentType.includes("application/json"); // Если не JSON, вероятно streaming
+            }
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -9374,41 +9369,51 @@ function setupMobileHamburgerMenu() {{
                 const errorMsg = errorData.error?.message || errorData.error || errorText || "";
                 if (errorMsg.includes("Developer instruction") || errorMsg.includes("system") || errorMsg.includes("instruction")) {
                     // Пытаемся отправить запрос без system prompt или с system как первое user сообщение
-                    if (systemPromptText && useSystemPrompt && restApiFormat === "openai") {
+                    if (systemPromptText && restApiFormat === "openai") {
                         console.log("Модель не поддерживает system prompt, отправляем как первое user сообщение");
-                        // Пересобираем запрос с system prompt как первое user сообщение
-                        let messagesForAPI = [];
-                        messagesForAPI.push({ role: "user", content: systemPromptText });
+                        // Оптимизированное пересобирание запроса с system prompt как первое user сообщение
+                        const messagesForAPI = [{ role: "user", content: systemPromptText }];
                         
-                        messagesToUse.forEach(m => {
-                            if (m.role === "system" && m.sender === "Система") return;
-                            if (m.content === "Отправка запроса на REST API...") return;
+                        // Используем оптимизированный цикл for вместо forEach
+                        for (let i = 0; i < messagesToUse.length; i++) {
+                            const m = messagesToUse[i];
+                            if (m.role === "system" && m.sender === "Система") continue;
+                            if (m.content === "Отправка запроса на REST API...") continue;
                             
-                            let apiMsgContentArray = [];
-                            if (m.content) apiMsgContentArray.push({ type: "text", text: m.content });
-                            if (m.attachments && m.attachments.some(att => att.type.startsWith('image/') && att.src.startsWith('data:image'))) {
-                                m.attachments.filter(att => att.type.startsWith('image/') && att.src.startsWith('data:image')).forEach(att => {
-                                    apiMsgContentArray.push({ type: "image_url", image_url: { url: att.src } });
-                                });
-                            } else if (m.attachments) {
-                                apiMsgContentArray.push({ type: "text", text: `[Прикреплено ${m.attachments.length} файлов]` });
+                            const isUser = (m.sender === "Вы" || m.role === "user");
+                            const role = isUser ? "user" : "assistant";
+                            
+                            let content;
+                            if (m.attachments && m.attachments.length > 0) {
+                                const imageAtts = m.attachments.filter(att => att.type && att.type.startsWith('image/') && att.src && att.src.startsWith('data:image'));
+                                if (imageAtts.length > 0) {
+                                    const apiMsgContentArray = [{ type: "text", text: m.content || "" }];
+                                    for (let j = 0; j < imageAtts.length; j++) {
+                                        apiMsgContentArray.push({ type: "image_url", image_url: { url: imageAtts[j].src } });
+                                    }
+                                    content = apiMsgContentArray;
+                                } else {
+                                    content = m.content || `[Прикреплено ${m.attachments.length} файлов]`;
+                                }
+                            } else {
+                                content = m.content || "";
                             }
                             
-                            const finalContent = apiMsgContentArray.length === 1 && apiMsgContentArray[0].type === "text" ? apiMsgContentArray[0].text : apiMsgContentArray;
-                            const role = (m.sender === "Вы" || m.role === "user") ? "user" : "assistant";
-                            const content = (m.sender !== "Вы" && m.role !== "user" && m.sender && currentMode === 'group') ? `${m.sender}: ${finalContent}` : finalContent;
+                            if (currentMode === 'group' && !isUser && m.sender) {
+                                content = `${m.sender}: ${content}`;
+                            }
+                            
                             messagesForAPI.push({ role, content });
-                        });
+                        }
                         
-                        // Проверяем селект напрямую для повторного запроса
-                        const restApiModelSelect = document.getElementById("restApiModel");
-                        const selectedModelFromSelect = restApiModelSelect?.value?.trim() || restApiModel?.trim() || "";
-                        const selectedModel = selectedModelFromSelect || charDataForApi?.model || document.getElementById("model")?.value || "gpt-3.5-turbo";
+                        // Используем уже кешированные значения
+                        const selectedModel = (restApiModelSelect?.value?.trim() || restApiModel?.trim() || charDataForApi?.model || modelSelect?.value || "gpt-3.5-turbo");
                         requestBody = {
                             model: selectedModel,
                             messages: messagesForAPI,
                             temperature: temperature,
-                            max_tokens: max_tokens
+                            max_tokens: max_tokens,
+                            stream: true
                         };
                         
                         // Повторный запрос без system prompt
@@ -9425,8 +9430,51 @@ function setupMobileHamburgerMenu() {{
                             throw new Error(`API Ошибка ${retryResponse.status}: ${retryErrorData.error?.message || retryErrorData.error || retryErrorText || retryResponse.statusText}`);
                         }
                         
-                        // Используем ответ повторного запроса
-                        responseData = await retryResponse.json();
+                        // Обрабатываем streaming ответ повторного запроса
+                        const retryContentType = retryResponse.headers.get("content-type") || "";
+                        const isRetryStreaming = retryContentType.includes("text/event-stream") || retryContentType.includes("text/plain");
+                        
+                        if (isRetryStreaming) {
+                            const reader = retryResponse.body.getReader();
+                            const decoder = new TextDecoder("utf-8");
+                            let streamedContent = "";
+                            let fullReply = "";
+
+                            while (true) {
+                                const { done, value } = await reader.read();
+                                if (done) break;
+
+                                const chunk = decoder.decode(value);
+                                const lines = chunk.split("\n").filter(line => line.trim().startsWith("data: "));
+                                for (const line of lines) {
+                                    if (line.includes("[DONE]")) break;
+                                    const jsonString = line.replace(/^data: /, "");
+                                    try {
+                                        const parsed = JSON.parse(jsonString);
+                                        const content = parsed.choices?.[0]?.delta?.content;
+                                        if (content) {
+                                            streamedContent += content;
+                                            fullReply = streamedContent;
+                                            if (streamingMessageDiv) {
+                                                streamingMessageDiv.innerHTML = `<strong>${displayName}:</strong>${marked.parse(fullReply)}`;
+                                                processCodeBlocks(streamingMessageDiv);
+                                                enableTranslationForInlineCode(streamingMessageDiv);
+                                                scrollToBottom(true);
+                                            }
+                                        }
+                                    } catch (e) {
+                                        // Игнорируем ошибки парсинга
+                                    }
+                                }
+                            }
+                            if (!fullReply && streamedContent) fullReply = streamedContent;
+                            apiReplyText = fullReply;
+                            responseData = { choices: [{ message: { content: apiReplyText } }] };
+                            isStreaming = true;
+                        } else {
+                            // Используем ответ повторного запроса как обычный JSON
+                            responseData = await retryResponse.json();
+                        }
                     } else {
                         throw new Error(`API Ошибка ${response.status}: ${errorMsg}`);
                     }
@@ -9434,15 +9482,74 @@ function setupMobileHamburgerMenu() {{
                     throw new Error(`API Ошибка ${response.status}: ${errorMsg}`);
                 }
             } else {
-                // Если ответ успешный, получаем данные
-                responseData = await response.json();
+                // Если ответ успешный, обрабатываем streaming или обычный JSON
+                if (isStreaming && restApiFormat === "openai") {
+                    // Клонируем response на случай, если streaming не сработает и нужно будет прочитать как JSON
+                    const clonedResponseForFallback = response.clone();
+                    try {
+                        // Обработка streaming ответа (Server-Sent Events)
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder("utf-8");
+                        let streamedContent = "";
+                        let fullReply = "";
+                        let hasValidData = false;
+
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+
+                            const chunk = decoder.decode(value);
+                            const lines = chunk.split("\n").filter(line => line.trim().startsWith("data: "));
+                            for (const line of lines) {
+                                if (line.includes("[DONE]")) break;
+                                const jsonString = line.replace(/^data: /, "");
+                                try {
+                                    const parsed = JSON.parse(jsonString);
+                                    const content = parsed.choices?.[0]?.delta?.content;
+                                    if (content) {
+                                        hasValidData = true;
+                                        streamedContent += content;
+                                        fullReply = streamedContent;
+                                        // Обновляем DOM напрямую во время streaming
+                                        if (streamingMessageDiv) {
+                                            streamingMessageDiv.innerHTML = `<strong>${displayName}:</strong>${marked.parse(fullReply)}`;
+                                            processCodeBlocks(streamingMessageDiv);
+                                            enableTranslationForInlineCode(streamingMessageDiv);
+                                            scrollToBottom(true);
+                                        }
+                                    }
+                                } catch (e) {
+                                    // Игнорируем ошибки парсинга для неполных чанков
+                                }
+                            }
+                        }
+                        if (!fullReply && streamedContent) fullReply = streamedContent;
+                        
+                        // Если не получили валидных данных через streaming, пробуем JSON
+                        if (!hasValidData && !fullReply) {
+                            throw new Error("Streaming не дал данных, переключаемся на JSON");
+                        }
+                        
+                        apiReplyText = fullReply;
+                        responseData = { choices: [{ message: { content: apiReplyText } }] }; // Для совместимости с дальнейшей обработкой
+                    } catch (streamError) {
+                        // Если streaming не сработал, пробуем обычный JSON
+                        console.warn("Streaming не удался, пробуем JSON:", streamError);
+                        isStreaming = false;
+                        responseData = await clonedResponseForFallback.json();
+                    }
+                } else {
+                    // Обычный JSON ответ (fallback)
+                    responseData = await response.json();
+                }
             }
             
-            // Parse response based on format
-            let apiReplyText = "";
-            let imageAttachments = [];
-            
-            if (restApiFormat === "openai") {
+            // Parse response based on format (только если не streaming)
+            if (!isStreaming || restApiFormat !== "openai") {
+                apiReplyText = "";
+                imageAttachments = [];
+                
+                if (restApiFormat === "openai") {
                 const choice = responseData.choices?.[0];
                 if (choice) {
                     // Проверяем, есть ли изображения в ответе
@@ -9532,9 +9639,10 @@ function setupMobileHamburgerMenu() {{
                                   JSON.stringify(responseData);
                 }
             }
+            }
 
-            // Если нет текста и нет изображений, выбрасываем ошибку
-            if ((!apiReplyText || apiReplyText.trim() === "") && imageAttachments.length === 0) {
+            // Если нет текста и нет изображений, выбрасываем ошибку (только если не streaming)
+            if ((!apiReplyText || apiReplyText.trim() === "") && imageAttachments.length === 0 && (!isStreaming || restApiFormat !== "openai")) {
                 throw new Error("Пустой ответ от API. Проверьте формат ответа API.");
             }
 
@@ -9553,11 +9661,18 @@ function setupMobileHamburgerMenu() {{
             }
             
             // Обновляем placeholder сообщение вместо создания нового
+            // При streaming DOM уже обновлялся во время получения данных
             if (customHistory === null) {
                 // Обычный режим - обновляем или добавляем в allMessages
                 if (placeholderIndex > -1) {
                     allMessages[placeholderIndex] = apiReplyMsgData;
-                    updateMessageInDOM(placeholderIndex, apiReplyMsgData);
+                    // При streaming не нужно обновлять DOM, он уже обновлен
+                    if (!isStreaming || restApiFormat !== "openai") {
+                        const refreshed = refreshMessageContent(placeholderIndex, apiReplyMsgData);
+                        if (!refreshed) {
+                            updateMessageInDOM(placeholderIndex, apiReplyMsgData);
+                        }
+                    }
                 } else {
                     allMessages.push(apiReplyMsgData);
                     appendNewMessageToDOM(apiReplyMsgData, allMessages.length - 1);
@@ -9567,7 +9682,13 @@ function setupMobileHamburgerMenu() {{
                 if (targetIndex >= 0 && targetIndex < allMessages.length) {
                     // Обновляем существующее сообщение
                     allMessages[targetIndex] = apiReplyMsgData;
-                    updateMessageInDOM(targetIndex, apiReplyMsgData);
+                    // При streaming не нужно обновлять DOM, он уже обновлен
+                    if (!isStreaming || restApiFormat !== "openai") {
+                        const refreshed = refreshMessageContent(targetIndex, apiReplyMsgData);
+                        if (!refreshed) {
+                            updateMessageInDOM(targetIndex, apiReplyMsgData);
+                        }
+                    }
                 } else {
                     // Если индекс не указан или невалиден, добавляем новое
                     allMessages.push(apiReplyMsgData);
@@ -9591,7 +9712,10 @@ function setupMobileHamburgerMenu() {{
                 const placeholderIndexOnError = allMessages.findIndex(m => m.content === "Отправка запроса на REST API..." && (m.sender === "API" || m.sender === charToRespondName));
                 if (placeholderIndexOnError > -1) {
                     allMessages[placeholderIndexOnError] = errorMsgData;
-                    updateMessageInDOM(placeholderIndexOnError, errorMsgData);
+                    const refreshed = refreshMessageContent(placeholderIndexOnError, errorMsgData);
+                    if (!refreshed) {
+                        updateMessageInDOM(placeholderIndexOnError, errorMsgData);
+                    }
                 } else {
                     allMessages.push(errorMsgData);
                     appendNewMessageToDOM(errorMsgData, allMessages.length - 1);
