@@ -1278,6 +1278,10 @@
       width: 100%;
       box-sizing: border-box;
     }
+    .message-container.no-animation {
+      animation: none !important;
+      transition: none !important;
+    }
     .message-content-wrapper {
         display: flex;
         align-items: flex-start;
@@ -1341,7 +1345,7 @@
 
     .message .attachments-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         gap: 0.5rem;
         margin-top: 0.5rem;
     }
@@ -1648,6 +1652,14 @@
     .message-buttons .regen-btn::before { content: "🔄"; }
     .message-buttons .edit-btn::before { content: "✏️"; }
     .message-buttons .copy-btn::before { content: "📋"; }
+
+    /* Variant controls: replace text with icons */
+    #prevVariantBtn, #nextVariantBtn, #applyVariantBtn {
+      position: relative;
+    }
+    #prevVariantBtn::before { content: "⟨"; }
+    #nextVariantBtn::before { content: "⟩"; }
+    #applyVariantBtn::before { content: "✓"; }
 
     /* --- СТИЛИ ДЛЯ РЕДАКТИРОВАНИЯ СООБЩЕНИЙ (ИСПРАВЛЕНО) --- */
     .message-edit-area {
@@ -3622,7 +3634,7 @@
 
     .message .attachments-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         gap: 0.5rem;
         margin-top: 0.5rem;
     }
@@ -3634,6 +3646,11 @@
         display: block;
         cursor: zoom-in;
         object-fit: cover;
+    }
+    @media (max-width: 640px) {
+      .message .attachments-grid {
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      }
     }
     .message a.attached-file-link {
         display: flex;
@@ -5518,6 +5535,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; } */
     };
     let regenerateVariants = [];
     let currentVariantIndex = -1;
+    let variantPreviewState = null; // Tracks what's currently rendered during variant browsing
     let isBotGenerating = false;
     let shouldScrollToBottom = true;
     let tempImportedCharacterData = null;
@@ -6324,6 +6342,13 @@ function setupMobileHamburgerMenu() {{
         // Check if the clicked element or any of its parents is the userInput or a child of inputContainer
         if (inputContainer && !inputContainer.contains(e.target)) {
             userInput.blur(); // Blur the input if click is outside
+        }
+      });
+      // Закрытие лайтбокса по Escape
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const imageLightbox = document.querySelector('.image-lightbox-overlay');
+          if (imageLightbox && imageLightbox.parentNode) imageLightbox.parentNode.removeChild(imageLightbox);
         }
       });
 
@@ -7910,7 +7935,7 @@ function setupMobileHamburgerMenu() {{
 
 
     // --- Message DOM Manipulation ---
-    function createMessageContainerDOM(msgData, index) {
+    function createMessageContainerDOM(msgData, index, skipAnimation = false) {
       const container = document.createElement("div");
       container.className = "message-container";
       container.dataset.index = index;
@@ -7990,13 +8015,6 @@ function setupMobileHamburgerMenu() {{
                 img.style.maxWidth = '100%';
                 img.style.height = 'auto';
                 img.style.cursor = 'pointer';
-                img.onclick = () => {
-                    // Открыть изображение в новой вкладке при клике
-                    const newWindow = window.open();
-                    if (newWindow) {
-                        newWindow.document.write(`<img src="${att.src}" style="max-width:100%;height:auto;">`);
-                    }
-                };
                 
                 // Кнопка скачивания
                 const downloadBtn = document.createElement('button');
@@ -8056,20 +8074,29 @@ function setupMobileHamburgerMenu() {{
         const copyBtn = document.createElement("button");
         copyBtn.className = "copy-btn"; copyBtn.title = "Копировать";
         copyBtn.setAttribute("aria-label", "Копировать сообщение");
-        copyBtn.addEventListener("click", () => copyMessageToClipboard(msgData.content || ""));
+        copyBtn.addEventListener("click", (e) => {
+          const idx = parseInt(e.currentTarget.closest('.message-container')?.dataset.index || "-1", 10);
+          if (idx >= 0) copyMessageToClipboard(allMessages[idx]?.content || "");
+        });
         buttonsDiv.appendChild(copyBtn);
 
         const editBtn = document.createElement("button");
         editBtn.className = "edit-btn"; editBtn.title = "Редактировать";
         editBtn.setAttribute("aria-label", "Редактировать сообщение");
-        editBtn.addEventListener("click", () => startEditingMessage(container, index));
+        editBtn.addEventListener("click", (e) => {
+          const idx = parseInt(e.currentTarget.closest('.message-container')?.dataset.index || "-1", 10);
+          if (idx >= 0) startEditingMessage(e.currentTarget.closest('.message-container'), idx);
+        });
         buttonsDiv.appendChild(editBtn);
 
         if (roleForButtons === "assistant") {
           const regenBtn = document.createElement("button");
           regenBtn.className = "regen-btn"; regenBtn.title = "Регенерировать";
           regenBtn.setAttribute("aria-label", "Регенерировать ответ");
-          regenBtn.addEventListener("click", () => regenerateMessage(index));
+          regenBtn.addEventListener("click", (e) => {
+            const idx = parseInt(e.currentTarget.closest('.message-container')?.dataset.index || "-1", 10);
+            if (idx >= 0) regenerateMessage(idx);
+          });
           if (isBotGenerating) regenBtn.disabled = true;
           buttonsDiv.appendChild(regenBtn);
         }
@@ -8077,22 +8104,46 @@ function setupMobileHamburgerMenu() {{
         const delBtn = document.createElement("button");
         delBtn.className = "delete-btn"; delBtn.title = "Удалить";
         delBtn.setAttribute("aria-label", "Удалить сообщение");
-        delBtn.addEventListener("click", () => deleteMessage(index));
+        delBtn.addEventListener("click", (e) => {
+          const idx = parseInt(e.currentTarget.closest('.message-container')?.dataset.index || "-1", 10);
+          if (idx >= 0) deleteMessage(idx);
+        });
         buttonsDiv.appendChild(delBtn);
 
         container.appendChild(buttonsDiv);
       }
+      const noAnimation = skipAnimation || !!msgData?._noAnimate;
+      if (noAnimation) {
+        container.classList.add('no-animation');
+        container.style.opacity = 1;
+        container.style.transform = 'translateY(0)';
+      }
+      if (msgData && msgData._noAnimate) delete msgData._noAnimate;
       return container;
     }
 
     function appendNewMessageToDOM(msgData, index) {
-        const container = createMessageContainerDOM(msgData, index);
+        const skipAnimation = !!msgData?._noAnimate;
+        const container = createMessageContainerDOM(msgData, index, skipAnimation);
         messagesBox.appendChild(container);
         renderedEndIndex = index; // Обновляем индекс последнего отрендеренного сообщения
-        requestAnimationFrame(() => {
-            container.style.opacity = 1;
-            container.style.transform = 'translateY(0)';
-        });
+        if (!skipAnimation) {
+            if (!container.classList.contains('no-animation')) {
+                if (!container.classList.contains('no-animation')) {
+                    requestAnimationFrame(() => {
+                        container.style.opacity = 1;
+                        container.style.transform = 'translateY(0)';
+                    });
+                } else {
+                    container.style.opacity = 1;
+                    container.style.transform = 'translateY(0)';
+                }
+            } else {
+                container.style.opacity = 1;
+                container.style.transform = 'translateY(0)';
+            }
+        }
+        if (msgData && msgData._noAnimate) delete msgData._noAnimate;
         if (shouldScrollToBottom) {
             scrollToBottom(true);
         }
@@ -8108,6 +8159,95 @@ function setupMobileHamburgerMenu() {{
                 newContainer.style.transform = 'translateY(0)';
             });
         }
+    }
+    // In-place refresh to avoid flicker: updates only the message bubble content and buttons
+    function refreshMessageContent(index, newMsgData) {
+        const container = messagesBox.querySelector(`.message-container[data-index="${index}"]`);
+        if (!container) return false;
+        const contentWrapper = container.querySelector('.message-content-wrapper');
+        const messageDiv = contentWrapper ? contentWrapper.querySelector('.message') : null;
+        if (!messageDiv) return false;
+        // Rebuild message inner HTML (sender + parsed content)
+        let senderName;
+        if (currentMode === "personal") {
+            const charNameForMsg = getCurrentCharacterName();
+            senderName = newMsgData.role === "user" ? "Вы" : (newMsgData.role === "system" ? "Система" : charNameForMsg);
+        } else {
+            senderName = newMsgData.sender || (newMsgData.role === "user" ? "Вы" : "Система");
+        }
+        const textPart = newMsgData.content ? marked.parse(newMsgData.content) : '';
+        messageDiv.innerHTML = `<strong>${senderName}:</strong>${textPart}`;
+        processCodeBlocks(messageDiv);
+        enableTranslationForInlineCode(messageDiv);
+        // Rebuild attachments
+        const oldGrid = messageDiv.querySelector('.attachments-grid');
+        if (oldGrid && oldGrid.parentNode) oldGrid.parentNode.removeChild(oldGrid);
+        if (newMsgData.attachments && newMsgData.attachments.length > 0) {
+            const attachmentsGrid = document.createElement('div');
+            attachmentsGrid.className = 'attachments-grid';
+            newMsgData.attachments.forEach((att, attIndex) => {
+                if (att.type && att.type.startsWith('image/')) {
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'image-attachment-container';
+                    imageContainer.style.position = 'relative';
+                    imageContainer.style.display = 'inline-block';
+                    imageContainer.style.margin = '0.5rem';
+                    imageContainer.style.borderRadius = '8px';
+                    imageContainer.style.overflow = 'hidden';
+                    imageContainer.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    imageContainer.style.maxWidth = '100%';
+                    const img = document.createElement('img');
+                    img.src = att.src;
+                    img.alt = att.name || 'Прикрепленное изображение';
+                    img.className = 'attached-image';
+                    img.style.display = 'block';
+                    img.style.maxWidth = '100%';
+                    img.style.height = 'auto';
+                    img.style.cursor = 'pointer';
+                    // Download button
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.className = 'image-download-btn';
+                    downloadBtn.innerHTML = '💾';
+                    downloadBtn.title = 'Скачать изображение';
+                    downloadBtn.style.position = 'absolute';
+                    downloadBtn.style.top = '8px';
+                    downloadBtn.style.right = '8px';
+                    downloadBtn.style.background = 'rgba(0,0,0,0.7)';
+                    downloadBtn.style.color = 'white';
+                    downloadBtn.style.border = 'none';
+                    downloadBtn.style.borderRadius = '4px';
+                    downloadBtn.style.padding = '6px 10px';
+                    downloadBtn.style.cursor = 'pointer';
+                    downloadBtn.style.fontSize = '16px';
+                    downloadBtn.style.zIndex = '10';
+                    downloadBtn.style.transition = 'background 0.2s';
+                    downloadBtn.onmouseover = () => downloadBtn.style.background = 'rgba(0,0,0,0.9)';
+                    downloadBtn.onmouseout = () => downloadBtn.style.background = 'rgba(0,0,0,0.7)';
+                    downloadBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        const link = document.createElement('a');
+                        link.href = att.src;
+                        link.download = att.name || `image-${attIndex + 1}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    };
+                    imageContainer.appendChild(img);
+                    imageContainer.appendChild(downloadBtn);
+                    attachmentsGrid.appendChild(imageContainer);
+                } else {
+                    const fileLink = document.createElement('a');
+                    fileLink.href = att.src;
+                    fileLink.target = '_blank';
+                    fileLink.className = 'attached-file-link';
+                    fileLink.download = att.name || 'file';
+                    fileLink.innerHTML = `<span class="file-icon">📄</span> ${att.name || 'Прикрепленный файл'}`;
+                    attachmentsGrid.appendChild(fileLink);
+                }
+            });
+            messageDiv.appendChild(attachmentsGrid);
+        }
+        return true;
     }
     function removeMessageFromDOM(index) {
         const containerToRemove = messagesBox.querySelector(`.message-container[data-index="${index}"]`);
@@ -8250,7 +8390,8 @@ function setupMobileHamburgerMenu() {{
                 sender: characterNameToRespond || "API", 
                 content: "Отправка запроса на REST API...", 
                 role: "assistant", 
-                avatar: apiPlaceholderAvatar
+                avatar: apiPlaceholderAvatar,
+                _noAnimate: true
             };
             if (currentMode === "group" && characterNameToRespond) {
                 placeholderMsgData.sender = characterNameToRespond;
@@ -8259,7 +8400,7 @@ function setupMobileHamburgerMenu() {{
             // Вставляем placeholder в массив по индексу
             allMessages.splice(targetIndex, 0, placeholderMsgData);
             // Вставляем placeholder в DOM в правильное место
-            const container = createMessageContainerDOM(placeholderMsgData, targetIndex);
+            const container = createMessageContainerDOM(placeholderMsgData, targetIndex, !!placeholderMsgData._noAnimate);
             const nextContainer = messagesBox.querySelector(`.message-container[data-index="${targetIndex}"]`);
             if (nextContainer) {
                 messagesBox.insertBefore(container, nextContainer);
@@ -8496,7 +8637,8 @@ function setupMobileHamburgerMenu() {{
                     sender: characterForResponse || "API", 
                     content: "Отправка запроса на REST API...", 
                     role: "assistant", 
-                    avatar: apiPlaceholderAvatar
+                    avatar: apiPlaceholderAvatar,
+                    _noAnimate: true
                 };
                 if (currentMode === "group" && characterForResponse) {
                     placeholderMsgData.sender = characterForResponse;
@@ -8504,7 +8646,7 @@ function setupMobileHamburgerMenu() {{
                 // Вставляем placeholder в массив по индексу
                 allMessages.splice(index, 0, placeholderMsgData);
                 // Вставляем placeholder в DOM в правильное место
-                const container = createMessageContainerDOM(placeholderMsgData, index);
+                const container = createMessageContainerDOM(placeholderMsgData, index, !!placeholderMsgData._noAnimate);
                 const nextContainer = messagesBox.querySelector(`.message-container[data-index="${index}"]`);
                 if (nextContainer) {
                     messagesBox.insertBefore(container, nextContainer);
@@ -8876,6 +9018,10 @@ function setupMobileHamburgerMenu() {{
       [prevVariantBtn, nextVariantBtn, applyVariantBtn, variantCounter].forEach(el => {
           if (el) el.style.display = hasVariants ? "inline-block" : "none";
       });
+      // Replace text with icons (CSS ::before draws icons)
+      if (prevVariantBtn) prevVariantBtn.textContent = "";
+      if (nextVariantBtn) nextVariantBtn.textContent = "";
+      if (applyVariantBtn) applyVariantBtn.textContent = "";
       if (!hasVariants) {
         if (variantCounter) variantCounter.textContent = "";
         if(prevVariantBtn) prevVariantBtn.disabled = true;
@@ -8893,9 +9039,11 @@ function setupMobileHamburgerMenu() {{
     function nextVariant() { if (currentVariantIndex < regenerateVariants.length - 1) { currentVariantIndex++; renderVariant(); updateVariantControls(); } }
     function applyVariant() {
       if (currentVariantIndex < 0 || currentVariantIndex >= regenerateVariants.length) return;
-      const variantToApply = regenerateVariants[currentVariantIndex];
-      allMessages = [...variantToApply];
-
+      const target = regenerateVariants[currentVariantIndex];
+      const fromState = JSON.parse(JSON.stringify(allMessages));
+      // Apply data (authoritative)
+      allMessages = [...target];
+      // Persist
       if (currentMode === "personal") {
         const name = getCurrentCharacterName();
         if (!name) return;
@@ -8903,17 +9051,70 @@ function setupMobileHamburgerMenu() {{
       } else {
         saveRoomChat(allMessages);
       }
-      clearVariantsAndRender();
+      // Flicker-free DOM diff (handles last message robustly)
+      applyChatDiffToDOM(fromState, target);
+      // Clear preview state and controls without full re-render
+      variantPreviewState = null;
+      clearVariants();
     }
     function renderVariant() {
       if (currentVariantIndex < 0 || currentVariantIndex >= regenerateVariants.length) return;
-      renderSpecificChatState(regenerateVariants[currentVariantIndex]);
+      // Initialize preview baseline to what's currently shown (allMessages deep copy)
+      if (!variantPreviewState) {
+        variantPreviewState = JSON.parse(JSON.stringify(allMessages));
+      }
+      const target = regenerateVariants[currentVariantIndex];
+      applyChatDiffToDOM(variantPreviewState, target);
+      variantPreviewState = JSON.parse(JSON.stringify(target));
     }
-    function clearVariants() { regenerateVariants = []; currentVariantIndex = -1; updateVariantControls(); }
+    function clearVariants() { regenerateVariants = []; currentVariantIndex = -1; variantPreviewState = null; updateVariantControls(); }
     function clearVariantsAndRender() {
         clearVariants();
         shouldScrollToBottom = true;
         loadAndRenderMessages();
+    }
+
+    function applyChatDiffToDOM(fromState, toState) {
+        const maxLen = Math.max(fromState.length, toState.length);
+        for (let i = 0; i < maxLen; i++) {
+            const a = fromState[i];
+            const b = toState[i];
+            // Remove if exists in from but not in to
+            if (a && !b) {
+                removeMessageFromDOM(i);
+                continue;
+            }
+            // Insert if exists in to but not in from
+            if (!a && b) {
+                const newContainer = createMessageContainerDOM(b, i, !!b?._noAnimate);
+                const children = messagesBox.querySelectorAll('.message-container');
+                if (i >= children.length) messagesBox.appendChild(newContainer);
+                else {
+                    const ref = messagesBox.querySelector(`.message-container[data-index="${i}"]`);
+                    if (ref) messagesBox.insertBefore(newContainer, ref);
+                    else messagesBox.appendChild(newContainer);
+                }
+                continue;
+            }
+            // Update if both exist and differ
+            if (a && b) {
+                const differs =
+                    a.role !== b.role ||
+                    a.sender !== b.sender ||
+                    a.content !== b.content ||
+                    JSON.stringify(a.attachments || null) !== JSON.stringify(b.attachments || null);
+                if (differs) {
+                    // In-place refresh to avoid flicker
+                    const ok = refreshMessageContent(i, b);
+                    if (!ok) updateMessageInDOM(i, b);
+                }
+            }
+        }
+        // Normalize dataset indices after DOM edits
+        const messageContainers = messagesBox.querySelectorAll('.message-container');
+        messageContainers.forEach((container, newIdx) => {
+            container.dataset.index = newIdx;
+        });
     }
 
 
@@ -8987,7 +9188,7 @@ function setupMobileHamburgerMenu() {{
         }
         setStatusActive(true);
         const apiPlaceholderAvatar = charDataForApi?.avatarCharacter || "https://placehold.co/80x80/80D0C0/FFFFFF?text=A";
-        const placeholderMsgData = {sender: charToRespondName || "API", content:"Отправка запроса на REST API...", role:"assistant", avatar: apiPlaceholderAvatar, attachments: attachmentsArray};
+        const placeholderMsgData = {sender: charToRespondName || "API", content:"Отправка запроса на REST API...", role:"assistant", avatar: apiPlaceholderAvatar, attachments: attachmentsArray, _noAnimate: true};
         if (currentMode === "group" && charToRespondName) {
             placeholderMsgData.sender = charToRespondName;
         }
@@ -9821,7 +10022,8 @@ function setupMobileHamburgerMenu() {{
         const userMsgObject = {
             role: "user",
             content: messageContent,
-            attachments: attachmentsDataArray.length > 0 ? attachmentsDataArray : null
+            attachments: attachmentsDataArray.length > 0 ? attachmentsDataArray : null,
+            _noAnimate: true
         };
 
         if (currentMode === "personal") {
@@ -9976,7 +10178,7 @@ function setupMobileHamburgerMenu() {{
     async function fetchGeminiChatCompletion(gApiKey, gModel, systemInstructionText, geminiContents, temperature, maxOutputTokens, apiCharacterName, chatArrayToUpdateRef, botAvatarUrl, isAfterEdit = false) {
         setStatusActive(true);
 
-        const placeholderMsgData = { content: "...", role: "assistant", avatar: botAvatarUrl, attachments: null };
+        const placeholderMsgData = { content: "...", role: "assistant", avatar: botAvatarUrl, attachments: null, _noAnimate: true };
         if (currentMode === "group") {
             placeholderMsgData.sender = apiCharacterName;
         }
@@ -10174,7 +10376,7 @@ function setupMobileHamburgerMenu() {{
       setStatusActive(true);
       shouldScrollToBottom = true;
 
-      const placeholderMsgData = { content: "...", role: "assistant", avatar: botAvatarUrl, attachments: null };
+      const placeholderMsgData = { content: "...", role: "assistant", avatar: botAvatarUrl, attachments: null, _noAnimate: true };
       if (currentMode === "group") {
           placeholderMsgData.sender = apiCharacterName;
       }
@@ -10505,7 +10707,7 @@ function setupMobileHamburgerMenu() {{
                 if (event.target.files.length > 0) {
                     Array.from(event.target.files).forEach(file => attachedFiles.push(file));
                     renderFilePreviews();
-                    userInput.placeholder = `${attachedFiles.length} файл(ов) прикреплено. Введите текст или отправьте.`;
+                    userInput.placeholder = "";
                 }
                 event.target.value = null;
             });
@@ -10536,9 +10738,9 @@ function setupMobileHamburgerMenu() {{
                 attachedFiles.splice(index, 1);
                 renderFilePreviews();
                  if (attachedFiles.length > 0) {
-                    userInput.placeholder = `${attachedFiles.length} файл(ов) прикреплено. Введите текст или отправьте.`;
+                    userInput.placeholder = "";
                 } else if (!userInput.value.trim()) {
-                     userInput.placeholder = "Введите сообщение...";
+                    userInput.placeholder = "Введите сообщение...";
                 }
             };
             previewItem.appendChild(removeBtn);
