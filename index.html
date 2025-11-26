@@ -10847,9 +10847,24 @@ function setupMobileHamburgerMenu() {{
     function setupFileAttach() {
         const hiddenFileInput = document.getElementById("fileInput");
         if(hiddenFileInput) {
-            hiddenFileInput.addEventListener("change", (event) => {
+            hiddenFileInput.addEventListener("change", async (event) => {
                 if (event.target.files.length > 0) {
-                    Array.from(event.target.files).forEach(file => attachedFiles.push(file));
+                    const files = Array.from(event.target.files);
+                    const compressedPromises = files.map(async file => {
+                        if (file.type.startsWith('image/')) {
+                            try {
+                                const compressedBlob = await compressImage(file);
+                                return new File([compressedBlob], file.name, {type: 'image/jpeg'});
+                            } catch (e) {
+                                console.warn('Image compression failed, using original:', e);
+                                return file;
+                            }
+                        } else {
+                            return file;
+                        }
+                    });
+                    const compressedFiles = await Promise.all(compressedPromises);
+                    attachedFiles.push(...compressedFiles);
                     renderFilePreviews();
                     userInput.placeholder = "";
                 }
@@ -10917,6 +10932,23 @@ function setupMobileHamburgerMenu() {{
             reader.onload = () => resolve(reader.result);
             reader.onerror = reject;
             reader.readAsDataURL(file);
+        });
+    }
+
+    function compressImage(file, maxWidth = 800, quality = 0.8) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const ratio = Math.min(1, maxWidth / Math.max(img.width, img.height));
+                canvas.width = img.width * ratio;
+                canvas.height = img.height * ratio;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob(resolve, 'image/jpeg', quality);
+            };
+            img.onerror = reject;
+            img.src = URL.createObjectURL(file);
         });
     }
 
