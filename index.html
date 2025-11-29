@@ -11736,11 +11736,11 @@ function clearChat() {
 <script>
 function openClearChatConfirm() {
   const modal = document.getElementById('clearChatConfirmModal');
-  if(modal) modal.style.display = 'flex';
+  if(modal) modal.classList.add('modal-show');
 }
 function closeClearChatConfirm() {
   const modal = document.getElementById('clearChatConfirmModal');
-  if(modal) modal.style.display = 'none';
+  if(modal) modal.classList.remove('modal-show');
 }
 function confirmClearChat() {
   closeClearChatConfirm();
